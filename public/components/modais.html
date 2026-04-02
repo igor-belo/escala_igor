@@ -1,0 +1,320 @@
+<div id="modalConfiguracoes" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 hidden backdrop-blur-sm">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl p-8 w-full max-w-3xl shadow-2xl relative">
+        <button onclick="document.getElementById('modalConfiguracoes').classList.add('hidden')" class="absolute top-6 right-6 text-gray-400 hover:text-red-500 transition-colors"><i class="fa-solid fa-xmark text-3xl"></i></button>
+        
+        <h2 class="text-2xl font-black mb-8 dark:text-white text-gray-800 border-b-2 pb-4 dark:border-gray-700">
+            <i class="fa-solid fa-sliders text-blue-600 mr-3"></i>Painel de Administração
+        </h2>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <button onclick="abrirListagemUsuarios()" class="group flex flex-col items-center justify-center p-8 bg-gray-50 hover:bg-blue-50 border-2 border-gray-200 hover:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600 dark:hover:border-blue-400 rounded-xl transition-all shadow-sm hover:shadow-md hover:-translate-y-1">
+                <div class="w-20 h-20 bg-blue-100 dark:bg-gray-800 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                    <i class="fa-solid fa-users text-4xl"></i>
+                </div>
+                <span class="font-black text-lg text-gray-700 dark:text-gray-200">Equipe</span>
+                <span class="text-sm text-gray-500 dark:text-gray-400 mt-2 text-center">Gerenciar contas e usuários</span>
+            </button>
+
+            <button onclick="abrirModalSetores()" class="group flex flex-col items-center justify-center p-8 bg-gray-50 hover:bg-blue-50 border-2 border-gray-200 hover:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600 dark:hover:border-blue-400 rounded-xl transition-all shadow-sm hover:shadow-md hover:-translate-y-1">
+                <div class="w-20 h-20 bg-blue-100 dark:bg-gray-800 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                    <i class="fa-solid fa-building-user text-4xl"></i>
+                </div>
+                <span class="font-black text-lg text-gray-700 dark:text-gray-200">Setores</span>
+                <span class="text-sm text-gray-500 dark:text-gray-400 mt-2 text-center">Estrutura e departamentos</span>
+            </button>
+
+            <button onclick="abrirModalTipos()" class="group flex flex-col items-center justify-center p-8 bg-gray-50 hover:bg-blue-50 border-2 border-gray-200 hover:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600 dark:hover:border-blue-400 rounded-xl transition-all shadow-sm hover:shadow-md hover:-translate-y-1">
+                <div class="w-20 h-20 bg-blue-100 dark:bg-gray-800 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                    <i class="fa-solid fa-tags text-4xl"></i>
+                </div>
+                <span class="font-black text-lg text-gray-700 dark:text-gray-200">Categorias</span>
+                <span class="text-sm text-gray-500 dark:text-gray-400 mt-2 text-center">Tipos de atendimento</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="modalLista" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-4xl shadow-xl relative max-h-[90vh] flex flex-col">
+        <button onclick="voltarParaConfiguracoes('modalLista')" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800 dark:hover:text-white"><i class="fa-solid fa-arrow-left text-xl"></i></button>
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-black dark:text-white"><i class="fa-solid fa-users mr-2"></i>Equipe</h2>
+            <button onclick="abrirModalCadastro()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded shadow transition mr-8"><i class="fa-solid fa-plus mr-2"></i>Novo Usuário</button>
+        </div>
+        <div class="overflow-y-auto flex-1 border rounded dark:border-gray-700">
+            <table class="w-full text-left border-collapse">
+                <thead class="bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 sticky top-0 shadow"><tr><th class="p-3 font-bold">Status</th><th class="p-3 font-bold">Nome</th><th class="p-3 font-bold">Login</th><th class="p-3 font-bold">Setor</th><th class="p-3 font-bold">Ação</th></tr></thead>
+                <tbody id="corpoTabelaUsuarios" class="text-sm dark:text-white"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="modalCadastro" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-2xl shadow-xl relative max-h-[90vh] overflow-y-auto">
+        <button onclick="fecharModalCadastro()" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800 dark:hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+        <h2 id="tituloModal" class="text-xl font-black mb-4 dark:text-white"></h2>
+        <form id="formCadastro">
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div><label class="block text-sm font-bold mb-1 dark:text-gray-300">Nome</label><input type="text" id="nome" class="w-full p-2 border rounded dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:border-blue-500" required></div>
+                <div><label class="block text-sm font-bold mb-1 dark:text-gray-300">E-mail</label><input type="email" id="email" class="w-full p-2 border rounded dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:border-blue-500" required></div>
+                <div><label class="block text-sm font-bold mb-1 dark:text-gray-300">Perfil</label><select id="tipo_perfil" class="w-full p-2 border rounded dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:border-blue-500"><option value="ANALISTA">Analista</option><option value="ADMIN">Administrador</option></select></div>
+                <div class="flex items-end pb-2"><label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" id="usuario_ativo" class="w-5 h-5 text-blue-600"><span class="font-bold dark:text-white">Usuário Ativo</span></label></div>
+            </div>
+            <div id="camposAnalista">
+                <hr class="my-4 dark:border-gray-600">
+                <div class="grid grid-cols-3 gap-4 mb-4">
+                    <div><label class="block text-sm font-bold mb-1 dark:text-gray-300">Setor</label><select id="setor_id_cadastro" class="w-full p-2 border rounded dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:border-blue-500"></select></div>
+                    <div class="col-span-2"><label class="block text-sm font-bold mb-1 dark:text-gray-300">Função Fixa na Escala</label><div class="flex gap-2"><select id="funcao_fixa" class="p-2 border rounded dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:border-blue-500 w-1/3"><option value="">Nenhuma</option><option value="Filtro">Filtro</option><option value="Chat">Chat</option><option value="Rev Almoço">Rev Almoço</option></select><input type="date" id="fixa_inicio" class="p-2 border rounded dark:bg-gray-700 dark:text-white dark:border-gray-600 w-1/3 focus:border-blue-500"><input type="date" id="fixa_fim" class="p-2 border rounded dark:bg-gray-700 dark:text-white dark:border-gray-600 w-1/3 focus:border-blue-500"></div></div>
+                </div>
+                <h3 class="font-bold mb-2 text-sm dark:text-gray-300">Expediente Semanal</h3>
+                <div id="gridHorarios" class="flex flex-col gap-2 mb-4"></div>
+            </div>
+            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded transition shadow mt-2">Salvar</button>
+        </form>
+    </div>
+</div>
+
+<div id="modalGerenciarSetores" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md shadow-xl relative max-h-[90vh] flex flex-col">
+        <button onclick="voltarParaConfiguracoes('modalGerenciarSetores')" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800 dark:hover:text-white"><i class="fa-solid fa-arrow-left text-xl"></i></button>
+        <h2 class="text-xl font-black mb-4 dark:text-white"><i class="fa-solid fa-building mr-2"></i>Setores</h2>
+        <div class="flex gap-2 mb-4">
+            <input type="text" id="novo_setor_nome" placeholder="Nome do Setor" class="flex-1 p-2 border rounded dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:border-blue-500">
+            <button onclick="salvarNovoSetor()" id="btnSalvarSetor" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition">Adicionar</button>
+            <button onclick="cancelarEdicaoSetor()" id="btnCancelarEdicaoSetor" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded transition hidden"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <ul id="lista_setores" class="flex-1 overflow-y-auto flex flex-col gap-2"></ul>
+    </div>
+</div>
+
+<div id="modalGerenciarTipos" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md shadow-xl relative max-h-[90vh] flex flex-col">
+        <button onclick="voltarParaConfiguracoes('modalGerenciarTipos')" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800 dark:hover:text-white"><i class="fa-solid fa-arrow-left text-xl"></i></button>
+        <h2 class="text-xl font-black mb-4 dark:text-white"><i class="fa-solid fa-tags mr-2"></i>Tipos de Atendimento</h2>
+        <div class="flex gap-2 mb-4">
+            <input type="text" id="novo_tipo_nome" placeholder="Ex: Incidente, Dúvida..." class="flex-1 p-2 border rounded dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:border-blue-500">
+            <button onclick="salvarNovoTipo()" id="btnSalvarTipo" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition">Adicionar</button>
+            <button onclick="cancelarEdicaoTipo()" id="btnCancelarEdicaoTipo" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded transition hidden"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <ul id="lista_tipos" class="flex-1 overflow-y-auto flex flex-col gap-2"></ul>
+    </div>
+</div>
+
+<div id="modalObsDia" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md shadow-xl relative">
+        <button onclick="document.getElementById('modalObsDia').classList.add('hidden')" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800 dark:hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+        <h2 id="tituloModalObs" class="text-xl font-black mb-4 text-red-600 dark:text-red-400"><i class="fa-solid fa-triangle-exclamation mr-2"></i>Aviso</h2>
+        <form id="formObsDia">
+            <input type="hidden" id="id_do_aviso_novo">
+            <input type="hidden" id="data_do_aviso_novo">
+            <div class="flex gap-4 mb-4">
+                <div class="flex-1"><label class="block text-sm font-bold mb-1 dark:text-gray-300">Setor</label><select id="setor_do_aviso_novo" class="w-full p-2 border rounded dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:border-blue-500"></select></div>
+                <div class="flex-1"><label class="block text-sm font-bold mb-1 dark:text-gray-300">Hora</label><input type="time" id="hora_do_aviso_novo" class="w-full p-2 border rounded dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:border-blue-500"></div>
+            </div>
+            <div class="mb-4"><label class="block text-sm font-bold mb-1 dark:text-gray-300">Analista Específico (Opcional)</label><select id="usuario_do_aviso_novo" class="w-full p-2 border rounded dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:border-blue-500"></select></div>
+            <div class="mb-4"><label class="block text-sm font-bold mb-1 dark:text-gray-300">Texto do Aviso</label><textarea id="texto_do_aviso_novo" class="w-full p-2 border rounded dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none h-24 focus:border-blue-500" required></textarea></div>
+            <div class="flex gap-2">
+                <button type="submit" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded transition shadow">Salvar Aviso</button>
+                <button type="button" id="btnExcluirObs" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded transition shadow hidden"><i class="fa-solid fa-trash"></i></button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="modalEdicaoEscala" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md shadow-xl relative">
+        <button onclick="document.getElementById('modalEdicaoEscala').classList.add('hidden')" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800 dark:hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+        <h2 class="text-xl font-black mb-4 dark:text-white"><i class="fa-solid fa-user-pen mr-2"></i>Editar Escala</h2>
+        <form id="formEdicaoEscala">
+            <input type="hidden" id="edit_escala_id">
+            <div class="mb-4"><label class="block text-gray-700 dark:text-gray-300 font-bold mb-2 text-sm">Analista</label><select id="edit_usuario_id" class="w-full p-2 border rounded bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:border-blue-500"></select></div>
+            <div class="mb-4 p-3 bg-gray-50 dark:bg-gray-700 rounded border dark:border-gray-600">
+                <label class="flex items-center gap-2 mb-2 cursor-pointer">
+                    <input type="checkbox" id="edit_dia_inteiro" class="w-4 h-4 text-blue-600" onchange="document.getElementById('container_edit_horarios').classList.toggle('hidden', this.checked)">
+                    <span class="text-sm font-bold dark:text-white">Dia Inteiro (Usa o expediente do cadastro)</span>
+                </label>
+                <div id="container_edit_horarios" class="flex gap-4 items-center mt-2">
+                    <div class="flex-1"><label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Hora Início</label><input type="time" id="edit_hora_inicio" class="w-full p-2 border rounded dark:bg-gray-600 dark:text-white dark:border-gray-500 outline-none focus:border-blue-500"></div>
+                    <div class="flex-1"><label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Hora Fim</label><input type="time" id="edit_hora_fim" class="w-full p-2 border rounded dark:bg-gray-600 dark:text-white dark:border-gray-500 outline-none focus:border-blue-500"></div>
+                </div>
+            </div>
+            <div class="mb-4"><label class="block text-gray-700 dark:text-gray-300 font-bold mb-2 text-sm">Observação / URL Reunião</label><input type="text" id="edit_observacao" placeholder="Ex: Link do Teams..." class="w-full p-2 border rounded bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:border-blue-500"></div>
+            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded transition shadow">Salvar Alterações</button>
+        </form>
+    </div>
+</div>
+
+<div id="modalNovoAtendimento" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-sm shadow-xl relative">
+        <button onclick="fecharModalNovoAtendimento()" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800 dark:hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+        <h2 class="text-xl font-black mb-4 dark:text-white"><i class="fa-solid fa-play mr-2"></i>Iniciar Atendimento</h2>
+        <form id="formNovoAtendimento">
+            <div class="mb-4"><label class="block text-gray-700 dark:text-gray-300 font-bold mb-2 text-sm">Número do Atendimento</label><input type="text" id="numero_atend" class="w-full p-2 border rounded bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:border-blue-500" required></div>
+            
+            <div class="mb-6"><label class="block text-gray-700 dark:text-gray-300 font-bold mb-2 text-sm">Tipo de Atendimento</label><select id="tipo_atend" class="w-full p-2 border rounded bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:border-blue-500" required></select></div>
+            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded transition shadow">Iniciar Agora</button>
+        </form>
+    </div>
+</div>
+
+<div id="modalNovaPrioridade" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md shadow-xl relative">
+        <button onclick="document.getElementById('modalNovaPrioridade').classList.add('hidden')" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800 dark:hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+        <h2 class="text-xl font-black mb-4 dark:text-white"><i class="fa-solid fa-layer-group mr-2"></i>Atendimento na Fila</h2>
+        <form id="formNovaPrioridade" onsubmit="salvarPrioridade(event)">
+            <input type="hidden" id="pri_id">
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div><label class="block text-sm font-bold mb-1 dark:text-gray-300">Atendimento</label><input type="text" id="pri_numero" class="w-full p-2 border rounded dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:border-blue-500" required></div>
+                <div><label class="block text-sm font-bold mb-1 dark:text-gray-300">Prioridade</label><select id="pri_nivel" class="w-full p-2 border rounded dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:border-blue-500"><option value="Alta">Alta</option><option value="Média">Média</option><option value="Baixa">Baixa</option></select></div>
+            </div>
+            
+            <div class="mb-4"><label class="block text-sm font-bold mb-1 dark:text-gray-300">Origem da solicitação:</label><input type="text" id="pri_origem" placeholder="Ex: Gerência, Coordenação, CX..." class="w-full p-2 border rounded dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:border-blue-500" required></div>
+            
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div><label class="block text-sm font-bold mb-1 dark:text-gray-300">Tipo</label><select id="pri_tipo" class="w-full p-2 border rounded dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:border-blue-500"></select></div>
+                <div><label class="block text-sm font-bold mb-1 dark:text-gray-300">Setor Destino</label><select id="pri_setor" class="w-full p-2 border rounded dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:border-blue-500"></select></div>
+            </div>
+            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded transition shadow mt-2">Salvar na Fila</button>
+        </form>
+    </div>
+</div>
+
+<div id="modalGeradorPersonalizado" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 hidden">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+        <div class="p-4 border-b dark:border-gray-700 flex justify-between items-center">
+            <h2 class="text-xl font-black dark:text-white"><i class="fa-solid fa-wand-magic-sparkles text-blue-600 mr-2"></i>Gerador de Escala Inteligente</h2>
+            <button onclick="document.getElementById('modalGeradorPersonalizado').classList.add('hidden')" class="text-gray-500 hover:text-gray-800 dark:hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+        </div>
+        <div class="p-6 overflow-y-auto flex-1">
+            <form id="formGeradorCustom" class="space-y-6">
+                <div class="grid grid-cols-4 gap-4">
+                    <div><label class="block text-xs font-bold mb-1 dark:text-gray-300 uppercase tracking-wider">Setor</label><select id="gerar_setor" class="w-full p-2 border rounded bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600 focus:border-blue-500 outline-none"></select></div>
+                    <div><label class="block text-xs font-bold mb-1 dark:text-gray-300 uppercase tracking-wider">Data Inicial</label><input type="date" id="gerar_data_inicio" class="w-full p-2 border rounded bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600 focus:border-blue-500 outline-none" required></div>
+                    <div><label class="block text-xs font-bold mb-1 dark:text-gray-300 uppercase tracking-wider">Data Final</label><input type="date" id="gerar_data_fim" class="w-full p-2 border rounded bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600 focus:border-blue-500 outline-none" required></div>
+                    <div><label class="block text-xs font-bold mb-1 dark:text-gray-300 uppercase tracking-wider">Rodízio a cada (Dias)</label><input type="number" id="gerar_frequencia" value="7" min="1" class="w-full p-2 border rounded bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600 focus:border-blue-500 outline-none" required></div>
+                </div>
+                <div class="border dark:border-gray-700 rounded-lg p-4 bg-gray-50/50 dark:bg-gray-800/50">
+                    <h3 class="text-sm font-bold dark:text-white mb-3 flex items-center"><i class="fa-solid fa-users text-blue-500 mr-2"></i>1. Selecione os Analistas (A ordem define o rodízio)</h3>
+                    <div id="gerar_analistas_lista" class="grid grid-cols-4 gap-2"></div>
+                </div>
+                <div class="border dark:border-gray-700 rounded-lg p-4 bg-gray-50/50 dark:bg-gray-800/50">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-sm font-bold dark:text-white flex items-center"><i class="fa-solid fa-clock text-orange-500 mr-2"></i>2. Defina os Turnos</h3>
+                        <button type="button" onclick="adicionarTurnoGerador()" class="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-xs font-bold py-1 px-3 rounded dark:text-white transition"><i class="fa-solid fa-plus mr-1"></i>Adicionar Turno</button>
+                    </div>
+                    <div id="gerar_turnos_container" class="flex flex-col"></div>
+                </div>
+            </form>
+        </div>
+        <div class="p-4 border-t dark:border-gray-700 bg-gray-50 dark:bg-gray-800 flex justify-end">
+            <button id="btnExecutarGerador" type="button" onclick="executarGeradorPersonalizado()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded shadow transition text-lg"><i class="fa-solid fa-play mr-2"></i>Gerar Escala</button>
+        </div>
+    </div>
+</div>
+
+<div id="modalConfirmarSubstituicao" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[60] hidden">
+    <div class="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md shadow-2xl relative text-center">
+        <div class="w-16 h-16 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+            <i class="fa-solid fa-triangle-exclamation text-3xl text-yellow-500"></i>
+        </div>
+        <h2 class="text-xl font-black mb-2 dark:text-white">Atenção: Escala Existente</h2>
+        <p class="text-gray-600 dark:text-gray-300 mb-6 text-sm">O sistema identificou que alguns analistas selecionados já possuem escalas manuais ou geradas neste período.<br><br>Você deseja <b>sobrescrever</b> (apagar a antiga) ou apenas <b>mesclar</b> os novos turnos com os existentes?</p>
+        <div class="flex flex-col gap-2">
+            <button onclick="confirmarE_GerarEscala()" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded transition shadow">Sobrescrever Tudo (Apagar Antigas)</button>
+            <button onclick="payloadGeradorMemoria.sobrescrever = false; confirmarE_GerarEscala()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded transition shadow">Apenas Mesclar (Manter Antigas)</button>
+            <button onclick="document.getElementById('modalConfirmarSubstituicao').classList.add('hidden')" class="w-full bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white font-bold py-2 rounded transition mt-2">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<div id="modalPrimeiroAcesso" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-sm shadow-xl relative">
+        <h2 class="text-xl font-black mb-4 dark:text-white text-center"><i class="fa-solid fa-lock text-blue-600 mr-2"></i>Bem-vindo!</h2>
+        <p class="text-sm text-gray-600 dark:text-gray-400 text-center mb-6">Este é o seu primeiro acesso. Por favor, crie uma nova senha de segurança para continuar.</p>
+        <form id="formPrimeiroAcesso">
+            <div class="mb-4"><label class="block text-sm font-bold mb-1 dark:text-gray-300">Nova Senha</label><input type="password" id="novaSenha" class="w-full p-2 border rounded dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:border-blue-500" required minlength="6"></div>
+            <div class="mb-6"><label class="block text-sm font-bold mb-1 dark:text-gray-300">Confirmar Senha</label><input type="password" id="confirmarSenha" class="w-full p-2 border rounded dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:border-blue-500" required minlength="6"></div>
+            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded transition shadow">Salvar Nova Senha</button>
+        </form>
+    </div>
+</div>
+
+<div id="modalPausarAtendimento" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-sm shadow-xl relative">
+        <button onclick="document.getElementById('modalPausarAtendimento').classList.add('hidden')" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800 dark:hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+        <h2 class="text-xl font-black mb-4 text-yellow-600 dark:text-yellow-500"><i class="fa-solid fa-pause mr-2"></i>Pausar Atendimento</h2>
+        <form id="formPausarAtendimento">
+            <input type="hidden" id="pausa_atendimento_id">
+            <div class="mb-4">
+                <label class="block text-gray-700 dark:text-gray-300 font-bold mb-2 text-sm">Motivo da Pausa</label>
+                <input type="text" id="pausa_motivo" placeholder="Ex: Aguardando cliente, Almoço..." class="w-full p-2 border rounded dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:border-yellow-500" required>
+            </div>
+            <button type="submit" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 rounded transition shadow">Pausar Relógio</button>
+        </form>
+    </div>
+</div>
+
+<div id="modalTransferirAtendimento" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-sm shadow-xl relative">
+        <button onclick="document.getElementById('modalTransferirAtendimento').classList.add('hidden')" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800 dark:hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+        <h2 class="text-xl font-black mb-4 text-blue-600 dark:text-blue-400"><i class="fa-solid fa-right-left mr-2"></i>Transferir</h2>
+        <form id="formTransferirAtendimento">
+            <input type="hidden" id="transf_atendimento_id">
+            <div class="mb-4">
+                <label class="block text-gray-700 dark:text-gray-300 font-bold mb-2 text-sm">Transferir para o Analista:</label>
+                <select id="transf_usuario_id" class="w-full p-2 border rounded dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:border-blue-500" required></select>
+            </div>
+            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded transition shadow">Confirmar Transferência</button>
+        </form>
+    </div>
+</div>
+
+<div id="modalRelatorioEscala" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[70] hidden backdrop-blur-sm">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-5xl shadow-2xl relative flex flex-col max-h-[90vh]">
+        <button onclick="document.getElementById('modalRelatorioEscala').classList.add('hidden')" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition-colors"><i class="fa-solid fa-xmark text-3xl"></i></button>
+        
+        <h2 class="text-2xl font-black mb-6 dark:text-white text-gray-800 border-b-2 pb-3 dark:border-gray-700">
+            <i class="fa-solid fa-table-list text-blue-600 mr-3"></i>Relatório Analítico de Escalas
+        </h2>
+
+        <div class="grid grid-cols-4 gap-4 mb-4 bg-gray-50 dark:bg-gray-700 p-4 rounded-xl border dark:border-gray-600">
+            <div>
+                <label class="block text-xs font-bold mb-1 dark:text-gray-300">Setor</label>
+                <select id="rel_escala_setor" class="w-full p-2 border rounded dark:bg-gray-800 dark:text-white dark:border-gray-500 outline-none focus:border-blue-500"></select>
+            </div>
+            <div>
+                <label class="block text-xs font-bold mb-1 dark:text-gray-300">Data Inicial</label>
+                <input type="date" id="rel_escala_inicio" class="w-full p-2 border rounded dark:bg-gray-800 dark:text-white dark:border-gray-500 outline-none focus:border-blue-500">
+            </div>
+            <div>
+                <label class="block text-xs font-bold mb-1 dark:text-gray-300">Data Final</label>
+                <input type="date" id="rel_escala_fim" class="w-full p-2 border rounded dark:bg-gray-800 dark:text-white dark:border-gray-500 outline-none focus:border-blue-500">
+            </div>
+            <div class="flex items-end">
+                <button onclick="buscarRelatorioEscala()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded transition shadow"><i class="fa-solid fa-magnifying-glass mr-2"></i>Buscar</button>
+            </div>
+        </div>
+
+        <div class="flex-1 overflow-auto border dark:border-gray-700 rounded-xl mb-4 bg-white dark:bg-gray-800 shadow-inner">
+            <table class="w-full text-left border-collapse whitespace-nowrap">
+                <thead class="bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-300 sticky top-0 shadow">
+                    <tr>
+                        <th class="p-3 font-bold">Data</th>
+                        <th class="p-3 font-bold">Analista</th>
+                        <th class="p-3 font-bold">Função</th>
+                        <th class="p-3 font-bold">Horário</th>
+                        <th class="p-3 font-bold">Observação</th>
+                    </tr>
+                </thead>
+                <tbody id="corpo_relatorio_escala" class="text-sm dark:text-white">
+                    <tr><td colspan="5" class="p-6 text-center text-gray-500 italic">Preencha os filtros e clique em buscar.</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="flex justify-end pt-2 border-t dark:border-gray-700">
+            <button onclick="exportarCSVEscala()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded shadow transition text-lg"><i class="fa-solid fa-file-csv mr-2"></i>Exportar para Excel (CSV)</button>
+        </div>
+    </div>
+</div>

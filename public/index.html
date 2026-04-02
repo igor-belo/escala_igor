@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Escalas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>tailwind.config = { darkMode: 'class' }</script>
+    <style>
+        .dark .fc { color: #e5e7eb; }
+        .dark .fc-theme-standard td, .dark .fc-theme-standard th, .dark .fc-theme-standard .fc-scrollgrid { border-color: #374151; }
+        
+        /* ILUMINAÇÃO AZUL NO DIA ATUAL DO CALENDÁRIO */
+        .fc-day-today {
+            background-color: rgba(59, 130, 246, 0.1) !important;
+            box-shadow: inset 0 0 15px rgba(59, 130, 246, 0.4), inset 0 0 0 2px #3b82f6 !important; 
+        }
+        .dark .fc-day-today {
+            background-color: rgba(59, 130, 246, 0.2) !important;
+            box-shadow: inset 0 0 20px rgba(59, 130, 246, 0.6), inset 0 0 0 2px #3b82f6 !important;
+        }
+
+        input[type="time"], input[type="date"] { color-scheme: light dark; }
+        .fc-event { cursor: pointer; border: none !important; }
+        .evento-editado { border-left: 4px solid #ef4444 !important; }
+        .fc-daygrid-day-frame { cursor: pointer; }
+        .evento-aviso { font-size: 0.85rem !important; font-weight: 700 !important; padding: 3px 4px !important; margin-top: 6px !important; border-radius: 4px !important; box-shadow: 0 1px 3px rgba(239, 68, 68, 0.4) !important;}
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 p-4 md:p-6 transition-colors duration-300">
+
+    <div id="header-container"></div>
+
+    <div class="max-w-7xl mx-auto bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+        <div class="flex justify-between items-center mb-6 border-b pb-4 dark:border-gray-700">
+            <h1 class="text-2xl font-bold dark:text-white">Controle de Escalas</h1>
+        </div>
+
+        <div id="barra-filtros" class="flex flex-col md:flex-row justify-between items-end gap-4 mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded border dark:border-gray-600">
+            <div id="box-setor" class="w-full md:w-1/3">
+                <label class="block text-sm font-medium dark:text-gray-300 mb-1">Filtrar Calendário por Setor</label>
+                <select id="filtro-setor" class="block w-full rounded dark:bg-gray-800 dark:text-white p-2 border dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none transition"></select>
+            </div>
+            
+            <div id="box-gerador-admin" class="hidden flex flex-col md:flex-row gap-2 w-full md:w-auto">
+                <button onclick="abrirModalGeradorPersonalizado()" class="w-full md:w-auto bg-purple-600 text-white px-6 py-2 rounded shadow hover:bg-purple-700 font-bold transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Gerador de Escalas
+                </button>
+                <button id="btnExportar" onclick="abrirModalRelatorioEscala()" class="w-full md:w-auto bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700 font-bold transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-file-csv"></i> Exportar Relatório
+                </button>
+            </div>
+        </div>
+
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-2 italic">* Clique em um dia vazio para adicionar uma observação ou agendamento.</p>
+        <div id='calendar' class="dark:text-white min-h-[600px]"></div>
+    </div>
+
+    <div id="modais-container"></div>
+    <div id="footer-container"></div>
+
+    <script src="/js/security.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/usuarios.js"></script>
+    <script src="/js/configuracoes.js"></script>
+    <script src="/js/app.js"></script>
+</body>
+</html>

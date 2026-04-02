@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Atendimentos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>tailwind.config = { darkMode: 'class' }</script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @media print {
+            body * { visibility: hidden; }
+            #area-impressao, #area-impressao * { visibility: visible; }
+            #area-impressao { position: absolute; left: 0; top: 0; width: 100%; }
+            .no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 p-4 md:p-6 transition-colors duration-300">
+
+    <div id="header-container" class="no-print"></div>
+
+    <div class="max-w-7xl mx-auto bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md no-print">
+        <div class="flex justify-between items-center mb-6 border-b pb-4 dark:border-gray-700">
+            <h1 class="text-2xl font-bold dark:text-white">
+                <i class="fa-solid fa-network-wired mr-2"></i>Gestão de Atendimentos
+            </h1>
+            <div class="flex gap-4 items-center">
+                <div id="box-setor">
+                    <select id="filtro-setor" class="p-2 border rounded dark:bg-gray-700 dark:text-white dark:border-gray-600 focus:ring-blue-500"></select>
+                </div>
+                
+                <button id="btnNovaPrioridade" onclick="abrirModalPrioridade()" class="hidden bg-purple-600 text-white px-4 py-2 rounded shadow hover:bg-purple-700 transition font-bold">
+                    <i class="fa-solid fa-star mr-2"></i>Nova Prioridade
+                </button>
+                <button id="btnNovoAtendimento" onclick="abrirModalNovoAtendimento()" class="bg-green-600 text-white px-4 py-2 rounded shadow hover:bg-green-700 transition font-bold">
+                    <i class="fa-solid fa-plus mr-2"></i>Novo Atendimento
+                </button>
+            </div>
+        </div>
+
+        <div id="abas-admin" class="hidden flex gap-4 border-b dark:border-gray-700 mb-6">
+            <button onclick="mudarAba('kanban')" id="tab-kanban" class="pb-2 font-bold border-b-2 border-blue-600 text-blue-600 dark:text-blue-400 px-2 transition">
+                <i class="fa-solid fa-chalkboard mr-2"></i>Painel Ativo
+            </button>
+            <button onclick="mudarAba('relatorios')" id="tab-relatorios" class="pb-2 font-bold border-b-2 border-transparent text-gray-500 hover:text-blue-600 px-2 transition">
+                <i class="fa-solid fa-chart-line mr-2"></i>Histórico e Relatórios
+            </button>
+        </div>
+
+        <div id="area-kanban">
+            
+            <div id="container-fila" class="mb-8 hidden">
+                <h2 class="text-lg font-bold text-gray-700 dark:text-gray-300 mb-4 border-b dark:border-gray-700 pb-2">
+                    <i class="fa-solid fa-list-check mr-2"></i>Fila de Prioridades (Aguardando Analista)
+                </h2>
+                <div id="fila-cards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    </div>
+            </div>
+
+            <h2 class="text-lg font-bold text-gray-700 dark:text-gray-300 mb-4 border-b dark:border-gray-700 pb-2">
+                <i class="fa-solid fa-users mr-2"></i>Equipe em Atendimento
+            </h2>
+            <div id="painel_usuarios" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                </div>
+        </div>
+
+        <div id="area-relatorios" class="hidden">
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6 bg-gray-50 dark:bg-gray-700 p-4 rounded border dark:border-gray-600">
+                <div>
+                    <label class="block text-sm font-medium dark:text-gray-300">Data Inicial</label>
+                    <input type="date" id="filtro-data-inicio" class="w-full p-2 border rounded dark:bg-gray-800 dark:text-white dark:border-gray-600">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium dark:text-gray-300">Data Final</label>
+                    <input type="date" id="filtro-data-fim" class="w-full p-2 border rounded dark:bg-gray-800 dark:text-white dark:border-gray-600">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium dark:text-gray-300">Analista</label>
+                    <select id="filtro-analista" class="w-full p-2 border rounded dark:bg-gray-800 dark:text-white dark:border-gray-600">
+                        <option value="">Todos</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium dark:text-gray-300">Tipo</label>
+                    <select id="filtro-tipo" class="w-full p-2 border rounded dark:bg-gray-800 dark:text-white dark:border-gray-600">
+                        <option value="">Todos</option>
+                    </select>
+                </div>
+                <div class="flex items-end">
+                    <button onclick="buscarRelatorios()" class="w-full bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700 font-bold">
+                        <i class="fa-solid fa-magnifying-glass mr-2"></i>Buscar
+                    </button>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 no-print">
+                <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow border dark:border-gray-700">
+                    <h3 class="text-center font-bold text-gray-700 dark:text-gray-300 mb-4">
+                        <i class="fa-solid fa-stopwatch mr-2 text-purple-500"></i>Tempo Médio por Analista (Minutos)
+                    </h3>
+                    <div class="relative h-64 w-full">
+                        <canvas id="graficoTempo"></canvas>
+                    </div>
+                </div>
+                <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow border dark:border-gray-700">
+                    <h3 class="text-center font-bold text-gray-700 dark:text-gray-300 mb-4">
+                        <i class="fa-solid fa-chart-pie mr-2 text-blue-500"></i>Volume de Atendimentos
+                    </h3>
+                    <div class="relative h-64 w-full">
+                        <canvas id="graficoAnalistas"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div class="bg-indigo-50 dark:bg-indigo-900/30 p-4 rounded-lg border border-indigo-200 dark:border-indigo-700 text-center">
+                    <h3 class="text-sm font-bold text-indigo-800 dark:text-indigo-300 uppercase"><i class="fa-solid fa-ticket mr-2"></i>Total Concluídos</h3>
+                    <p id="resumo-total" class="text-3xl font-black text-indigo-900 dark:text-indigo-100 mt-2">0</p>
+                </div>
+                <div class="bg-green-50 dark:bg-green-900/30 p-4 rounded-lg border border-green-200 dark:border-green-700 text-center">
+                    <h3 class="text-sm font-bold text-green-800 dark:text-green-300 uppercase"><i class="fa-solid fa-stopwatch mr-2"></i>Tempo Total Gasto</h3>
+                    <p id="resumo-tempo-total" class="text-3xl font-black text-green-900 dark:text-green-100 mt-2 font-mono">00:00:00</p>
+                </div>
+                <div class="bg-purple-50 dark:bg-purple-900/30 p-4 rounded-lg border border-purple-200 dark:border-purple-700 text-center">
+                    <h3 class="text-sm font-bold text-purple-800 dark:text-purple-300 uppercase"><i class="fa-solid fa-gauge-high mr-2"></i>Tempo Médio / Atendimento</h3>
+                    <p id="resumo-tempo-medio" class="text-3xl font-black text-purple-900 dark:text-purple-100 mt-2 font-mono">00:00:00</p>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-4 mb-4">
+                <button onclick="exportarCSV()" class="bg-gray-800 text-white px-4 py-2 rounded shadow hover:bg-gray-900 font-bold transition">
+                    <i class="fa-solid fa-file-csv mr-2"></i>Exportar CSV
+                </button>
+                <button onclick="window.print()" class="bg-red-600 text-white px-4 py-2 rounded shadow hover:bg-red-700 font-bold transition">
+                    <i class="fa-solid fa-file-pdf mr-2"></i>Salvar PDF
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="area-impressao" class="max-w-7xl mx-auto px-4 hidden print:block">
+        <h2 class="text-2xl font-bold mb-4 text-center">Relatório de Atendimentos Concluídos</h2>
+        <div class="overflow-x-auto bg-white dark:bg-gray-800 rounded shadow">
+            <table class="w-full text-left border-collapse text-sm">
+                <thead>
+                    <tr class="bg-gray-100 dark:bg-gray-700 dark:text-white border-b dark:border-gray-600">
+                        <th class="p-3">Atendimento</th>
+                        <th class="p-3">Analista</th>
+                        <th class="p-3">Tipo</th>
+                        <th class="p-3">Início</th>
+                        <th class="p-3">Término</th>
+                        <th class="p-3">Tempo Útil Gasto</th>
+                    </tr>
+                </thead>
+                <tbody id="corpo-tabela-relatorio" class="dark:text-gray-200">
+                    <tr><td colspan="6" class="p-4 text-center text-gray-500">Faça uma busca para exibir os resultados.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="modais-container" class="no-print"></div>
+    <div id="footer-container" class="no-print"></div>
+    
+    <script src="/js/security.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/usuarios.js"></script>
+    <script src="/js/configuracoes.js"></script>
+    <script src="/js/app.js"></script>
+</body>
+</body>
+</html>
