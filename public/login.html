@@ -86,7 +86,7 @@
             const msgErro = document.getElementById('msg-erro-login');
 
             try {
-                const resposta = await fetch('http://localhost:3000/api/login', {
+                const resposta = await fetch('/api/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ identificador, senha })
@@ -126,7 +126,7 @@
             }
 
             try {
-                const resposta = await fetch('http://localhost:3000/api/alterar-senha', {
+                const resposta = await fetch('/api/alterar-senha', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ id: usuarioTemporario.id, novaSenha: novaSenha })
@@ -152,6 +152,7 @@
     <script src="/js/usuarios.js"></script>
     <script src="/js/configuracoes.js"></script>
     <script src="/js/app.js"></script>
+
 </body>
 </body>
 </html>

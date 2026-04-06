@@ -61,9 +61,7 @@
 
     <script>
         document.getElementById('formCadastro').addEventListener('submit', async function(event) {
-            event.preventDefault(); // Evita que a página recarregue
-
-            // Pegando os valores digitados no formulário
+            event.preventDefault(); 
             const dadosUsuario = {
                 nome: document.getElementById('nome').value,
                 email: document.getElementById('email').value,
@@ -75,7 +73,7 @@
 
             try {
                 // Enviando os dados para o nosso backend Node.js
-                const resposta = await fetch('http://localhost:3000/api/usuarios', {
+                const resposta = await fetch('/api/usuarios', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
