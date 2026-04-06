@@ -1,6 +1,6 @@
 async function fazerLogin(e) {
     e.preventDefault();
-    const identificador = document.getElementById('identificador').value;
+    const identificador = document.getElementById('identificador').value.trim().toLowerCase();
     const senha = document.getElementById('senha').value;
     const btn = e.target.querySelector('button');
     const txtOriginal = btn.innerHTML;
