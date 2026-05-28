@@ -28,6 +28,13 @@
         .fc-daygrid-day-frame { cursor: pointer; }
         .evento-aviso { font-size: 0.85rem !important; font-weight: 700 !important; padding: 3px 4px !important; margin-top: 6px !important; border-radius: 4px !important; box-shadow: 0 1px 3px rgba(239, 68, 68, 0.4) !important;}
     </style>
+<script>
+    if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+    } else {
+        document.documentElement.classList.remove('dark');
+    }
+</script>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 p-4 md:p-6 transition-colors duration-300">
 

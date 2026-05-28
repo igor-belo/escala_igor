@@ -104,13 +104,30 @@ async function initEscalas() {
     calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'dayGridMonth', locale: 'pt-br', weekends: false, headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek' }, eventOrder: 'ordem_exibicao',
         dateClick: async function(info) {
-            if (usuarioLogado.tipo_perfil !== 'ADMIN') return alert('Apenas administradores.');
-            document.getElementById('formObsDia').reset(); document.getElementById('id_do_aviso_novo').value = ''; document.getElementById('data_do_aviso_novo').value = info.dateStr; document.getElementById('hora_do_aviso_novo').value = ''; document.getElementById('usuario_do_aviso_novo').value = '';
-            const [ano, mes, dia] = info.dateStr.split('-'); document.getElementById('tituloModalObs').textContent = `Novo Aviso: ${dia}/${mes}/${ano}`;
+            document.getElementById('formObsDia').reset(); 
+            document.getElementById('id_do_aviso_novo').value = ''; 
+            document.getElementById('data_do_aviso_novo').value = info.dateStr; 
+            document.getElementById('hora_do_aviso_novo').value = ''; 
+            document.getElementById('usuario_do_aviso_novo').value = '';
+            
+            const [ano, mes, dia] = info.dateStr.split('-'); 
+            document.getElementById('tituloModalObs').textContent = `Novo Aviso: ${dia}/${mes}/${ano}`;
+            
             const elSetor = document.getElementById('filtro-setor');
-            const sf = (elSetor && elSetor.value !== 'todos') ? elSetor.value : document.getElementById('setor_do_aviso_novo').options[0].value;
-            document.getElementById('setor_do_aviso_novo').value = sf; await preencherUsuariosAviso(sf);
-            document.getElementById('btnExcluirObs').classList.add('hidden'); document.getElementById('modalObsDia').classList.remove('hidden');
+            let sf;
+            if (usuarioLogado.tipo_perfil !== 'ADMIN') {
+                sf = usuarioLogado.setor_id;
+                document.getElementById('setor_do_aviso_novo').disabled = true;
+            } else {
+                sf = (elSetor && elSetor.value !== 'todos') ? elSetor.value : document.getElementById('setor_do_aviso_novo').options[0].value;
+                document.getElementById('setor_do_aviso_novo').disabled = false;
+            }
+            
+            document.getElementById('setor_do_aviso_novo').value = sf; 
+            await preencherUsuariosAviso(sf);
+            
+            document.getElementById('btnExcluirObs').classList.add('hidden'); 
+            document.getElementById('modalObsDia').classList.remove('hidden');
         },
         events: async (info, success, failure) => {
             const elSetor = document.getElementById('filtro-setor'); const sid = (elSetor && elSetor.value) ? elSetor.value : usuarioLogado.setor_id; let todosEventos = [];
@@ -134,27 +151,19 @@ async function initEscalas() {
             const ev = info.event;
             if (ev.extendedProps.tipo === 'observacao_dia') {
                 const ep = ev.extendedProps;
-                if (usuarioLogado.tipo_perfil !== 'ADMIN') {
-                    // Analistas: abrir modal de visualização (somente leitura)
-                    const [a, m, d] = ep.data.split('-');
-                    document.getElementById('ver_obs_data_hora').textContent = `${d}/${m}/${a}` + (ep.hora ? ` às ${ep.hora}` : '');
-                    document.getElementById('ver_crm').textContent = ep.crm || '--';
-                    document.getElementById('ver_atendimento').textContent = ep.numero_atendimento || '--';
-                    document.getElementById('ver_assunto').textContent = ep.assunto || '--';
-                    document.getElementById('ver_data').textContent = `${d}/${m}/${a}`;
-                    document.getElementById('ver_hora').textContent = ep.hora || '--';
-                    document.getElementById('ver_numero_contato').textContent = ep.numero_contato || '--';
-                    document.getElementById('ver_cliente').textContent = ep.cliente_responsavel || '--';
-                    document.getElementById('ver_analista_contato').textContent = ep.analista_contato || ep.nome_analista || '--';
-                    document.getElementById('ver_observacao').textContent = ep.observacao || '--';
-                    document.getElementById('ver_obs_analista').textContent = ep.nome_analista ? `Destinatário: ${ep.nome_analista}` : '';
-                    document.getElementById('modalVerObservacao').classList.remove('hidden');
-                    return;
-                }
-                // Admin: abrir modal de edição com todos os campos
+                
+                // Abre o modal de edição
                 document.getElementById('id_do_aviso_novo').value = ep.id_real;
                 document.getElementById('data_do_aviso_novo').value = ep.data;
-                document.getElementById('setor_do_aviso_novo').value = ep.setor_id;
+                
+                if (usuarioLogado.tipo_perfil !== 'ADMIN') {
+                    document.getElementById('setor_do_aviso_novo').value = usuarioLogado.setor_id;
+                    document.getElementById('setor_do_aviso_novo').disabled = true;
+                } else {
+                    document.getElementById('setor_do_aviso_novo').value = ep.setor_id;
+                    document.getElementById('setor_do_aviso_novo').disabled = false;
+                }
+                
                 document.getElementById('texto_do_aviso_novo').value = ep.observacao;
                 document.getElementById('hora_do_aviso_novo').value = ep.hora || '';
                 document.getElementById('aviso_crm').value = ep.crm || '';
