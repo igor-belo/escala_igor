@@ -70,6 +70,12 @@
                 <h3 class="font-bold mb-2 text-sm dark:text-gray-300">Expediente Semanal</h3>
                 <div id="gridHorarios" class="flex flex-col gap-2 mb-4"></div>
             </div>
+            <hr class="my-4 dark:border-gray-600">
+            <div class="mb-4">
+                <label class="block text-sm font-bold mb-1 dark:text-gray-300"><i class="fa-brands fa-google text-green-500 mr-1"></i>Webhook Google Chat (URL)</label>
+                <input type="url" id="webhook_url" placeholder="https://chat.googleapis.com/v1/spaces/..." class="w-full p-2 border rounded dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:border-blue-500 text-xs">
+                <p class="text-xs text-gray-400 mt-1">URL do webhook do Google Chat para receber notificações de agendamento.</p>
+            </div>
             <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded transition shadow mt-2">Salvar</button>
         </form>
     </div>
@@ -102,18 +108,47 @@
 </div>
 
 <div id="modalObsDia" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-    <div class="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md shadow-xl relative">
+    <div class="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-lg shadow-xl relative max-h-[90vh] overflow-y-auto">
         <button onclick="document.getElementById('modalObsDia').classList.add('hidden')" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800 dark:hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
-        <h2 id="tituloModalObs" class="text-xl font-black mb-4 text-red-600 dark:text-red-400"><i class="fa-solid fa-triangle-exclamation mr-2"></i>Aviso</h2>
+        <h2 id="tituloModalObs" class="text-xl font-black mb-1 text-red-600 dark:text-red-400"><i class="fa-solid fa-triangle-exclamation mr-2"></i>Aviso</h2>
+        <p class="text-xs text-gray-400 dark:text-gray-500 mb-4">Preencha os dados do agendamento. Os campos marcados com * são obrigatórios.</p>
         <form id="formObsDia">
             <input type="hidden" id="id_do_aviso_novo">
             <input type="hidden" id="data_do_aviso_novo">
-            <div class="flex gap-4 mb-4">
-                <div class="flex-1"><label class="block text-sm font-bold mb-1 dark:text-gray-300">Setor</label><select id="setor_do_aviso_novo" class="w-full p-2 border rounded dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:border-blue-500"></select></div>
-                <div class="flex-1"><label class="block text-sm font-bold mb-1 dark:text-gray-300">Hora</label><input type="time" id="hora_do_aviso_novo" class="w-full p-2 border rounded dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:border-blue-500"></div>
+
+            <!-- Setor + Hora -->
+            <div class="flex gap-4 mb-3">
+                <div class="flex-1"><label class="block text-xs font-bold mb-1 dark:text-gray-300">Setor *</label><select id="setor_do_aviso_novo" class="w-full p-2 border rounded dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:border-red-500"></select></div>
+                <div class="w-32"><label class="block text-xs font-bold mb-1 dark:text-gray-300">Hora do Contato</label><input type="time" id="hora_do_aviso_novo" class="w-full p-2 border rounded dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:border-red-500"></div>
             </div>
-            <div class="mb-4"><label class="block text-sm font-bold mb-1 dark:text-gray-300">Analista Específico (Opcional)</label><select id="usuario_do_aviso_novo" class="w-full p-2 border rounded dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:border-blue-500"></select></div>
-            <div class="mb-4"><label class="block text-sm font-bold mb-1 dark:text-gray-300">Texto do Aviso</label><textarea id="texto_do_aviso_novo" class="w-full p-2 border rounded dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none h-24 focus:border-blue-500" required></textarea></div>
+
+            <!-- Analista destinatário -->
+            <div class="mb-3"><label class="block text-xs font-bold mb-1 dark:text-gray-300">Analista Destinatário (Opcional)</label><select id="usuario_do_aviso_novo" class="w-full p-2 border rounded dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:border-red-500"></select></div>
+
+            <hr class="my-3 dark:border-gray-700">
+            <p class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-3">Dados do Agendamento</p>
+
+            <!-- CRM + Atendimento -->
+            <div class="grid grid-cols-2 gap-3 mb-3">
+                <div><label class="block text-xs font-bold mb-1 dark:text-gray-300">CRM</label><input type="text" id="aviso_crm" placeholder="Ex: 721739" class="w-full p-2 border rounded dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:border-red-500 font-mono"></div>
+                <div><label class="block text-xs font-bold mb-1 dark:text-gray-300">Nº Atendimento</label><input type="text" id="aviso_numero_atendimento" placeholder="Ex: 184395664" class="w-full p-2 border rounded dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:border-red-500 font-mono"></div>
+            </div>
+
+            <!-- Assunto -->
+            <div class="mb-3"><label class="block text-xs font-bold mb-1 dark:text-gray-300">Assunto *</label><input type="text" id="aviso_assunto" placeholder="Ex: Atualização de versão" class="w-full p-2 border rounded dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:border-red-500" required></div>
+
+            <!-- Número de contato + Cliente -->
+            <div class="grid grid-cols-2 gap-3 mb-3">
+                <div><label class="block text-xs font-bold mb-1 dark:text-gray-300">Número de Contato</label><input type="text" id="aviso_numero_contato" placeholder="Ex: 41999978834" class="w-full p-2 border rounded dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:border-red-500 font-mono"></div>
+                <div><label class="block text-xs font-bold mb-1 dark:text-gray-300">Cliente Responsável</label><input type="text" id="aviso_cliente_responsavel" placeholder="Ex: Leandra" class="w-full p-2 border rounded dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:border-red-500"></div>
+            </div>
+
+            <!-- Analista de contato (nome livre) -->
+            <div class="mb-3"><label class="block text-xs font-bold mb-1 dark:text-gray-300">Analista de Contato</label><input type="text" id="aviso_analista_contato" placeholder="Nome do analista que fará o contato" class="w-full p-2 border rounded dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:border-red-500"></div>
+
+            <!-- Observação -->
+            <div class="mb-4"><label class="block text-xs font-bold mb-1 dark:text-gray-300">Observação / Texto do Aviso *</label><textarea id="texto_do_aviso_novo" class="w-full p-2 border rounded dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none h-20 focus:border-red-500" placeholder="Ex: Reagendado, cliente solicitou contato às 17h..." required></textarea></div>
+
             <div class="flex gap-2">
                 <button type="submit" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded transition shadow">Salvar Aviso</button>
                 <button type="button" id="btnExcluirObs" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded transition shadow hidden"><i class="fa-solid fa-trash"></i></button>
@@ -316,5 +351,84 @@
         <div class="flex justify-end pt-2 border-t dark:border-gray-700">
             <button onclick="exportarCSVEscala()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded shadow transition text-lg"><i class="fa-solid fa-file-csv mr-2"></i>Exportar para Excel (CSV)</button>
         </div>
+    </div>
+</div>
+
+<!-- MODAL: EDITAR ATENDIMENTO ATIVO -->
+<div id="modalEditarAtendimento" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 hidden backdrop-blur-sm">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-sm shadow-2xl relative">
+        <button onclick="document.getElementById('modalEditarAtendimento').classList.add('hidden')" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition-colors">
+            <i class="fa-solid fa-xmark text-xl"></i>
+        </button>
+        <h2 class="text-xl font-black mb-1 dark:text-white"><i class="fa-solid fa-pen-to-square text-blue-500 mr-2"></i>Editar Atendimento</h2>
+        <p class="text-xs text-gray-400 dark:text-gray-500 mb-5">Corrija o número do ticket ou o tipo de atendimento.</p>
+        <form id="formEditarAtendimento">
+            <input type="hidden" id="edit_atend_id">
+            <div class="mb-4">
+                <label class="block text-sm font-bold mb-1 dark:text-gray-300">Número do Ticket</label>
+                <input type="text" id="edit_atend_numero" class="w-full p-2 border-2 rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:border-blue-500 transition font-mono text-lg" required>
+            </div>
+            <div class="mb-6">
+                <label class="block text-sm font-bold mb-1 dark:text-gray-300">Tipo de Atendimento</label>
+                <select id="edit_atend_tipo" class="w-full p-2 border-2 rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:border-blue-500 transition" required></select>
+            </div>
+            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition shadow-md">
+                <i class="fa-solid fa-floppy-disk mr-2"></i>Salvar Alterações
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL: CANCELAR ATENDIMENTO ATIVO -->
+<div id="modalCancelarAtendimento" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden backdrop-blur-sm">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-sm shadow-2xl relative text-center">
+        <div class="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+            <i class="fa-solid fa-ban text-3xl text-red-500"></i>
+        </div>
+        <h2 class="text-xl font-black mb-2 dark:text-white">Cancelar Atendimento?</h2>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">Ticket: <span id="cancelar_atend_info" class="font-bold text-gray-700 dark:text-gray-200 font-mono"></span></p>
+        <p class="text-xs text-gray-400 dark:text-gray-500 mb-6">Este atendimento será removido permanentemente. Use esta opção apenas se foi aberto por engano.</p>
+        <input type="hidden" id="cancelar_atend_id">
+        <div class="flex flex-col gap-2">
+            <button onclick="confirmarCancelamento()" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-lg transition shadow-md">
+                <i class="fa-solid fa-trash-can mr-2"></i>Sim, cancelar e excluir
+            </button>
+            <button onclick="document.getElementById('modalCancelarAtendimento').classList.add('hidden')" class="w-full bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white font-bold py-2 rounded-lg transition">
+                Voltar
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: VISUALIZAR OBSERVAÇÃO (somente leitura — analistas e admins) -->
+<div id="modalVerObservacao" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 hidden backdrop-blur-sm">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-md shadow-2xl relative">
+        <button onclick="document.getElementById('modalVerObservacao').classList.add('hidden')" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition-colors">
+            <i class="fa-solid fa-xmark text-xl"></i>
+        </button>
+        <div class="flex items-center gap-3 mb-5">
+            <div class="w-10 h-10 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
+                <i class="fa-solid fa-calendar-check text-red-500"></i>
+            </div>
+            <div>
+                <h2 class="text-lg font-black dark:text-white">Detalhes do Agendamento</h2>
+                <p id="ver_obs_data_hora" class="text-xs text-gray-400 dark:text-gray-500"></p>
+            </div>
+        </div>
+
+        <div class="space-y-2 text-sm bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4 font-mono border dark:border-gray-700">
+            <div class="flex gap-2"><span class="text-gray-500 dark:text-gray-400 w-40 shrink-0">CRM:</span><span id="ver_crm" class="font-bold dark:text-white"></span></div>
+            <div class="flex gap-2"><span class="text-gray-500 dark:text-gray-400 w-40 shrink-0">Atendimento:</span><span id="ver_atendimento" class="font-bold dark:text-white"></span></div>
+            <div class="flex gap-2"><span class="text-gray-500 dark:text-gray-400 w-40 shrink-0">Assunto:</span><span id="ver_assunto" class="font-bold dark:text-white font-sans"></span></div>
+            <div class="flex gap-2"><span class="text-gray-500 dark:text-gray-400 w-40 shrink-0">Dia do contato:</span><span id="ver_data" class="font-bold dark:text-white"></span></div>
+            <div class="flex gap-2"><span class="text-gray-500 dark:text-gray-400 w-40 shrink-0">Hora do contato:</span><span id="ver_hora" class="font-bold dark:text-white"></span></div>
+            <div class="flex gap-2"><span class="text-gray-500 dark:text-gray-400 w-40 shrink-0">Número de contato:</span><span id="ver_numero_contato" class="font-bold dark:text-white"></span></div>
+            <div class="flex gap-2"><span class="text-gray-500 dark:text-gray-400 w-40 shrink-0">Cliente responsável:</span><span id="ver_cliente" class="font-bold dark:text-white font-sans"></span></div>
+            <div class="flex gap-2"><span class="text-gray-500 dark:text-gray-400 w-40 shrink-0">Analista de contato:</span><span id="ver_analista_contato" class="font-bold dark:text-white font-sans"></span></div>
+            <hr class="dark:border-gray-600 my-1">
+            <div class="flex gap-2"><span class="text-gray-500 dark:text-gray-400 w-40 shrink-0">Observação:</span><span id="ver_observacao" class="font-bold dark:text-white font-sans"></span></div>
+        </div>
+
+        <p id="ver_obs_analista" class="text-xs text-gray-400 dark:text-gray-500 mt-3 text-right"></p>
     </div>
 </div>

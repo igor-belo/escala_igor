@@ -16,6 +16,7 @@ router.post('/fila', atendimentosController.cadastrarFila);
 router.get('/fila', atendimentosController.listarFila);
 router.put('/fila/:id', atendimentosController.atualizarFila);
 router.put('/:id/assumir', atendimentosController.assumirTicket);
+router.put('/:id/editar', atendimentosController.editarAtendimento);
 router.delete('/:id', atendimentosController.excluirAtendimento);
 
 module.exports = router;

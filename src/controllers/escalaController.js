@@ -145,7 +145,7 @@ exports.gerarEscalaCustom = async (req, res) => {
 
 exports.listarObservacoes = async (req, res) => {
     try {
-        const { setor_id } = req.query; let query = `SELECT o.id, TO_CHAR(o.data, 'YYYY-MM-DD') as data, o.setor_id, o.observacao, o.usuario_id, o.hora, u.nome FROM observacoes_dia o LEFT JOIN usuarios u ON o.usuario_id = u.id WHERE 1=1`;
+        const { setor_id } = req.query; let query = `SELECT o.id, TO_CHAR(o.data, 'YYYY-MM-DD') as data, o.setor_id, o.observacao, o.usuario_id, o.hora, u.nome, o.crm, o.numero_atendimento, o.assunto, o.numero_contato, o.cliente_responsavel, o.analista_contato, o.criado_por FROM observacoes_dia o LEFT JOIN usuarios u ON o.usuario_id = u.id WHERE 1=1`;
         const params = []; if (setor_id && setor_id !== 'todos') { query += ` AND o.setor_id = $1`; params.push(setor_id); }
         res.json((await pool.query(query, params)).rows);
     } catch (erro) { res.status(500).json({ erro: erro.message }); }
@@ -153,10 +153,17 @@ exports.listarObservacoes = async (req, res) => {
 
 exports.salvarObservacao = async (req, res) => {
     try {
-        let { id, data, setor_id, observacao, usuario_id, hora } = req.body;
+        let { id, data, setor_id, observacao, usuario_id, hora, crm, numero_atendimento, assunto, numero_contato, cliente_responsavel, analista_contato, criado_por } = req.body;
         usuario_id = usuario_id ? usuario_id : null; hora = hora ? hora : null;
-        if (id) { await pool.query('UPDATE observacoes_dia SET setor_id=$1, observacao=$2, usuario_id=$3, hora=$4 WHERE id=$5', [setor_id, observacao, usuario_id, hora, id]); } 
-        else { await pool.query('INSERT INTO observacoes_dia (data, setor_id, observacao, usuario_id, hora) VALUES ($1, $2, $3, $4, $5)', [data, setor_id, observacao, usuario_id, hora]); }
+        crm = crm || null; numero_atendimento = numero_atendimento || null; assunto = assunto || null;
+        numero_contato = numero_contato || null; cliente_responsavel = cliente_responsavel || null; analista_contato = analista_contato || null;
+        if (id) { 
+            await pool.query('UPDATE observacoes_dia SET setor_id=$1, observacao=$2, usuario_id=$3, hora=$4, crm=$5, numero_atendimento=$6, assunto=$7, numero_contato=$8, cliente_responsavel=$9, analista_contato=$10, notificado=FALSE WHERE id=$11', 
+                [setor_id, observacao, usuario_id, hora, crm, numero_atendimento, assunto, numero_contato, cliente_responsavel, analista_contato, id]); 
+        } else { 
+            await pool.query('INSERT INTO observacoes_dia (data, setor_id, observacao, usuario_id, hora, crm, numero_atendimento, assunto, numero_contato, cliente_responsavel, analista_contato, criado_por) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)', 
+                [data, setor_id, observacao, usuario_id, hora, crm, numero_atendimento, assunto, numero_contato, cliente_responsavel, analista_contato, criado_por || null]); 
+        }
         res.json({ sucesso: true });
     } catch (erro) { res.status(500).json({ erro: erro.message }); }
 };

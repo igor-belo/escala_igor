@@ -14,9 +14,12 @@ exports.login = async (req, res) => {
         const senhaValida = await bcrypt.compare(senha, usuario.senha);
         if (!senhaValida) return res.status(401).json({ erro: 'Senha incorreta' });
         
-        delete usuario.senha; // Remove a senha antes de devolver pro frontend por segurança
+        delete usuario.senha; 
         res.json({ sucesso: true, usuario });
-    } catch (erro) { res.status(500).json({ erro: 'Erro no servidor' }); }
+    } catch (erro) { 
+        console.log("ERRO REAL NO LOGIN:", erro); // <-- ESSA É A LINHA SALVADORA
+        res.status(500).json({ erro: 'Erro no servidor' }); 
+    }
 };
 
 exports.alterarSenha = async (req, res) => {
@@ -25,5 +28,8 @@ exports.alterarSenha = async (req, res) => {
         const senhaCripto = await bcrypt.hash(novaSenha, 10);
         await pool.query('UPDATE usuarios SET senha = $1, primeiro_acesso = false WHERE id = $2', [senhaCripto, id]);
         res.json({ sucesso: true });
-    } catch (erro) { res.status(500).json({ erro: 'Erro ao alterar a senha' }); }
+    } catch (erro) { 
+        console.log("ERRO AO ALTERAR SENHA:", erro); 
+        res.status(500).json({ erro: 'Erro ao alterar a senha' }); 
+    }
 };

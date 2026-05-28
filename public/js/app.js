@@ -102,18 +102,56 @@ async function initEscalas() {
                     return { id: `esc_${d.id}`, title: `${d.funcao}: ${d.nome} ${tituloExt}` + (d.observacao ? ` (Obs)` : ''), start: d.data, color: d.funcao === 'Chat' ? '#3b82f6' : d.funcao === 'Filtro' ? '#10b981' : '#f59e0b', ordem_exibicao: 1, classNames: d.editado_manualmente ? ['evento-editado'] : [], extendedProps: { tipo: 'escala', id_real: d.id, usuario_id: d.usuario_id, observacao: d.observacao || '', funcao: d.funcao, setor_id: d.setor_id, dia_inteiro: d.dia_inteiro, hora_inicio: d.hora_inicio, hora_fim: d.hora_fim } };
                 })); }
                 const resObs = await fetch(`/api/observacoes?setor_id=${sid}`);
-                if (resObs.ok) { todosEventos = todosEventos.concat((await resObs.json()).map(o => { let t = o.observacao; if(o.nome) t = `${o.nome}: ${t}`; if (o.hora) { t = `[${o.hora.substring(0, 5)}] ⚠️ ${t}`; } else { t = `⚠️ ${t}`; } return { id: `obs_${o.id}`, title: t, start: o.data, color: '#ef4444', ordem_exibicao: 2, classNames: ['evento-aviso'], extendedProps: { tipo: 'observacao_dia', id_real: o.id, observacao: o.observacao, setor_id: o.setor_id, data: o.data, usuario_id: o.usuario_id, hora: o.hora ? o.hora.substring(0, 5) : '' } }; })); }
+                if (resObs.ok) { todosEventos = todosEventos.concat((await resObs.json()).map(o => {
+                    let t = o.assunto || o.observacao;
+                    if(o.nome) t = `${o.nome}: ${t}`;
+                    if (o.hora) { t = `[${o.hora.substring(0, 5)}] ⚠️ ${t}`; } else { t = `⚠️ ${t}`; }
+                    return { id: `obs_${o.id}`, title: t, start: o.data, color: '#ef4444', ordem_exibicao: 2, classNames: ['evento-aviso'], extendedProps: { tipo: 'observacao_dia', id_real: o.id, observacao: o.observacao, setor_id: o.setor_id, data: o.data, usuario_id: o.usuario_id, hora: o.hora ? o.hora.substring(0, 5) : '', nome_analista: o.nome || '', crm: o.crm || '', numero_atendimento: o.numero_atendimento || '', assunto: o.assunto || '', numero_contato: o.numero_contato || '', cliente_responsavel: o.cliente_responsavel || '', analista_contato: o.analista_contato || '' } };
+                })); }
                 success(todosEventos);
             } catch (e) { failure(e); }
         },
         eventClick: async function(info) {
-            if (usuarioLogado.tipo_perfil !== 'ADMIN') return; const ev = info.event;
+            const ev = info.event;
             if (ev.extendedProps.tipo === 'observacao_dia') {
-                document.getElementById('id_do_aviso_novo').value = ev.extendedProps.id_real; document.getElementById('data_do_aviso_novo').value = ev.extendedProps.data; document.getElementById('setor_do_aviso_novo').value = ev.extendedProps.setor_id; document.getElementById('texto_do_aviso_novo').value = ev.extendedProps.observacao; document.getElementById('hora_do_aviso_novo').value = ev.extendedProps.hora || '';
-                await preencherUsuariosAviso(ev.extendedProps.setor_id, ev.extendedProps.usuario_id);
-                const [a, m, d] = ev.extendedProps.data.split('-'); document.getElementById('tituloModalObs').textContent = `Editar Aviso: ${d}/${m}/${a}`;
-                document.getElementById('btnExcluirObs').classList.remove('hidden'); document.getElementById('modalObsDia').classList.remove('hidden'); return;
+                const ep = ev.extendedProps;
+                if (usuarioLogado.tipo_perfil !== 'ADMIN') {
+                    // Analistas: abrir modal de visualização (somente leitura)
+                    const [a, m, d] = ep.data.split('-');
+                    document.getElementById('ver_obs_data_hora').textContent = `${d}/${m}/${a}` + (ep.hora ? ` às ${ep.hora}` : '');
+                    document.getElementById('ver_crm').textContent = ep.crm || '--';
+                    document.getElementById('ver_atendimento').textContent = ep.numero_atendimento || '--';
+                    document.getElementById('ver_assunto').textContent = ep.assunto || '--';
+                    document.getElementById('ver_data').textContent = `${d}/${m}/${a}`;
+                    document.getElementById('ver_hora').textContent = ep.hora || '--';
+                    document.getElementById('ver_numero_contato').textContent = ep.numero_contato || '--';
+                    document.getElementById('ver_cliente').textContent = ep.cliente_responsavel || '--';
+                    document.getElementById('ver_analista_contato').textContent = ep.analista_contato || ep.nome_analista || '--';
+                    document.getElementById('ver_observacao').textContent = ep.observacao || '--';
+                    document.getElementById('ver_obs_analista').textContent = ep.nome_analista ? `Destinatário: ${ep.nome_analista}` : '';
+                    document.getElementById('modalVerObservacao').classList.remove('hidden');
+                    return;
+                }
+                // Admin: abrir modal de edição com todos os campos
+                document.getElementById('id_do_aviso_novo').value = ep.id_real;
+                document.getElementById('data_do_aviso_novo').value = ep.data;
+                document.getElementById('setor_do_aviso_novo').value = ep.setor_id;
+                document.getElementById('texto_do_aviso_novo').value = ep.observacao;
+                document.getElementById('hora_do_aviso_novo').value = ep.hora || '';
+                document.getElementById('aviso_crm').value = ep.crm || '';
+                document.getElementById('aviso_numero_atendimento').value = ep.numero_atendimento || '';
+                document.getElementById('aviso_assunto').value = ep.assunto || '';
+                document.getElementById('aviso_numero_contato').value = ep.numero_contato || '';
+                document.getElementById('aviso_cliente_responsavel').value = ep.cliente_responsavel || '';
+                document.getElementById('aviso_analista_contato').value = ep.analista_contato || '';
+                await preencherUsuariosAviso(ep.setor_id, ep.usuario_id);
+                const [a, m, d] = ep.data.split('-');
+                document.getElementById('tituloModalObs').textContent = `Editar Aviso: ${d}/${m}/${a}`;
+                document.getElementById('btnExcluirObs').classList.remove('hidden');
+                document.getElementById('modalObsDia').classList.remove('hidden');
+                return;
             }
+            if (usuarioLogado.tipo_perfil !== 'ADMIN') return;
             try {
                 const resU = await fetch('/api/usuarios'); const an = (await resU.json()).filter(u => u.setor_id == ev.extendedProps.setor_id && u.tipo_perfil === 'ANALISTA');
                 const sel = document.getElementById('edit_usuario_id'); sel.innerHTML = ''; an.forEach(u => { sel.innerHTML += `<option value="${u.id}">${u.nome}</option>`; });
@@ -154,10 +192,26 @@ async function salvarEdicaoEscala(e) {
 }
 
 async function salvarAviso(e) {
-    e.preventDefault(); const uv = document.getElementById('usuario_do_aviso_novo').value; const hv = document.getElementById('hora_do_aviso_novo').value;
-    const body = { id: document.getElementById('id_do_aviso_novo').value || null, data: document.getElementById('data_do_aviso_novo').value, setor_id: parseInt(document.getElementById('setor_do_aviso_novo').value), observacao: document.getElementById('texto_do_aviso_novo').value, usuario_id: uv ? parseInt(uv) : null, hora: hv ? hv : null };
+    e.preventDefault();
+    const uv = document.getElementById('usuario_do_aviso_novo').value;
+    const hv = document.getElementById('hora_do_aviso_novo').value;
+    const body = {
+        id: document.getElementById('id_do_aviso_novo').value || null,
+        data: document.getElementById('data_do_aviso_novo').value,
+        setor_id: parseInt(document.getElementById('setor_do_aviso_novo').value),
+        observacao: document.getElementById('texto_do_aviso_novo').value,
+        usuario_id: uv ? parseInt(uv) : null,
+        hora: hv ? hv : null,
+        crm: document.getElementById('aviso_crm').value || null,
+        numero_atendimento: document.getElementById('aviso_numero_atendimento').value || null,
+        assunto: document.getElementById('aviso_assunto').value || null,
+        numero_contato: document.getElementById('aviso_numero_contato').value || null,
+        cliente_responsavel: document.getElementById('aviso_cliente_responsavel').value || null,
+        analista_contato: document.getElementById('aviso_analista_contato').value || null,
+        criado_por: usuarioLogado.id
+    };
     const res = await fetch('/api/observacoes', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body) });
-    if (res.ok) { document.getElementById('modalObsDia').classList.add('hidden'); calendar.refetchEvents(); } else { alert('Erro.'); }
+    if (res.ok) { document.getElementById('modalObsDia').classList.add('hidden'); calendar.refetchEvents(); } else { alert('Erro ao salvar aviso.'); }
 }
 
 async function excluirAviso() {
@@ -173,7 +227,14 @@ async function initAtendimentos() {
         const btnNovo = document.getElementById('btnNovoAtendimento'); if(btnNovo) btnNovo.classList.add('hidden'); 
     } else {
         const btnPri = document.getElementById('btnNovaPrioridade'); if(btnPri) btnPri.remove();
-        const abasAdmin = document.getElementById('abas-admin'); if(abasAdmin) abasAdmin.remove();
+        // Analistas também veem abas, mas sem relatórios completos — mostrar apenas Painel e Finalizados Hoje
+        const abasAdmin = document.getElementById('abas-admin');
+        if (abasAdmin) {
+            abasAdmin.classList.remove('hidden');
+            // Esconder aba de relatórios para analistas
+            const tabRelatorios = document.getElementById('tab-relatorios');
+            if (tabRelatorios) tabRelatorios.classList.add('hidden');
+        }
     }
     try {
         const resS = await fetch('/api/setores'); const setores = await resS.json();
@@ -201,17 +262,34 @@ async function carregarTiposDeAtendimento() {
 async function carregarPainelE_Fila() { await carregarPainelKanban(); await carregarFilaPrioridades(); }
 
 window.mudarAba = function(aba) {
-    const btnKanban = document.getElementById('tab-kanban'); const btnRelatorios = document.getElementById('tab-relatorios');
-    const areaKanban = document.getElementById('area-kanban'); const areaRelatorios = document.getElementById('area-relatorios'); const areaImpressao = document.getElementById('area-impressao');
+    const btnKanban = document.getElementById('tab-kanban');
+    const btnRelatorios = document.getElementById('tab-relatorios');
+    const btnFinalizados = document.getElementById('tab-finalizados-hoje');
+    const areaKanban = document.getElementById('area-kanban');
+    const areaRelatorios = document.getElementById('area-relatorios');
+    const areaImpressao = document.getElementById('area-impressao');
+    const areaFinalizados = document.getElementById('area-finalizados-hoje');
+
+    // Reset all tabs
+    [btnKanban, btnRelatorios, btnFinalizados].forEach(btn => {
+        if (!btn) return;
+        btn.classList.remove('border-blue-600', 'text-blue-600', 'dark:text-blue-400');
+        btn.classList.add('border-transparent', 'text-gray-500');
+    });
+    [areaKanban, areaRelatorios, areaImpressao, areaFinalizados].forEach(area => { if (area) area.classList.add('hidden'); });
+
     if (aba === 'kanban') {
-        btnKanban.classList.replace('border-transparent', 'border-blue-600'); btnKanban.classList.replace('text-gray-500', 'text-blue-600');
-        btnRelatorios.classList.replace('border-blue-600', 'border-transparent'); btnRelatorios.classList.replace('text-blue-600', 'text-gray-500');
-        areaKanban.classList.remove('hidden'); areaRelatorios.classList.add('hidden'); areaImpressao.classList.add('hidden');
-    } else {
-        btnRelatorios.classList.replace('border-transparent', 'border-blue-600'); btnRelatorios.classList.replace('text-gray-500', 'text-blue-600');
-        btnKanban.classList.replace('border-blue-600', 'border-transparent'); btnKanban.classList.replace('text-blue-600', 'text-gray-500');
-        areaKanban.classList.add('hidden'); areaRelatorios.classList.remove('hidden'); areaImpressao.classList.remove('hidden');
-        if(!document.getElementById('filtro-data-inicio').value) { document.getElementById('filtro-data-inicio').value = new Date().toISOString().split('T')[0]; document.getElementById('filtro-data-fim').value = new Date().toISOString().split('T')[0]; }
+        if (btnKanban) { btnKanban.classList.replace('border-transparent', 'border-blue-600'); btnKanban.classList.replace('text-gray-500', 'text-blue-600'); }
+        if (areaKanban) areaKanban.classList.remove('hidden');
+    } else if (aba === 'relatorios') {
+        if (btnRelatorios) { btnRelatorios.classList.replace('border-transparent', 'border-blue-600'); btnRelatorios.classList.replace('text-gray-500', 'text-blue-600'); }
+        if (areaRelatorios) areaRelatorios.classList.remove('hidden');
+        if (areaImpressao) areaImpressao.classList.remove('hidden');
+        if (!document.getElementById('filtro-data-inicio').value) { document.getElementById('filtro-data-inicio').value = new Date().toISOString().split('T')[0]; document.getElementById('filtro-data-fim').value = new Date().toISOString().split('T')[0]; }
+    } else if (aba === 'finalizados') {
+        if (btnFinalizados) { btnFinalizados.classList.replace('border-transparent', 'border-blue-600'); btnFinalizados.classList.replace('text-gray-500', 'text-blue-600'); }
+        if (areaFinalizados) areaFinalizados.classList.remove('hidden');
+        carregarFinalizadosHoje();
     }
 };
 
@@ -298,12 +376,13 @@ function desenharPainelKanban() {
             }
 
             let footerCard = '';
-            // Usa '==' ao invés de '===' para evitar bug do texto vs número no ID
-            if (usuarioLogado.tipo_perfil === 'ADMIN' || usuarioLogado.id == user.id) {
+            // Cronômetro visível APENAS para ADMIN
+            if (usuarioLogado.tipo_perfil === 'ADMIN') {
                 footerCard = `<div class="mt-3 text-center bg-gray-800 text-white rounded font-mono text-lg py-1 timer-calculado shadow-inner ${a.status === 'PAUSADO' ? 'opacity-50' : ''}" data-inicio="${a.data_inicio}" data-pausa="${a.tempo_em_pausa_ms}" data-inicio-pausa="${a.inicio_ultima_pausa}" data-status="${a.status}">00:00:00</div>`; 
             }
             
-            if (usuarioLogado.id == user.id || usuarioLogado.tipo_perfil === 'ADMIN') { 
+            if (usuarioLogado.id == user.id || usuarioLogado.tipo_perfil === 'ADMIN') {
+                // Linha 1: Pausar/Retomar | Transferir | Concluir
                 footerCard += `<div class="mt-2 grid grid-cols-3 gap-1">`;
                 
                 if (a.status === 'PAUSADO') {
@@ -315,6 +394,12 @@ function desenharPainelKanban() {
                 footerCard += `
                     <button onclick="abrirModalTransferencia(${a.id})" class="bg-blue-400 hover:bg-blue-500 text-white text-xs font-bold py-2 rounded shadow flex justify-center items-center" title="Transferir Ticket"><i class="fa-solid fa-right-left"></i></button>
                     <button onclick="finalizarAtendimento(${a.id})" class="bg-green-500 hover:bg-green-600 text-white text-xs font-bold py-2 rounded shadow flex justify-center items-center" title="Concluir Atendimento"><i class="fa-solid fa-check"></i></button>
+                </div>`;
+
+                // Linha 2: Editar | Cancelar (aberto por engano)
+                footerCard += `<div class="mt-1 grid grid-cols-2 gap-1">
+                    <button onclick="abrirModalEditarAtendimento(${a.id}, '${a.numero_atendimento}', ${a.tipo_id})" class="bg-gray-500 hover:bg-gray-600 text-white text-xs font-bold py-1.5 rounded shadow flex justify-center items-center gap-1" title="Editar ticket ou tipo"><i class="fa-solid fa-pen text-xs"></i> Editar</button>
+                    <button onclick="abrirModalCancelarAtendimento(${a.id}, '${a.numero_atendimento}')" class="bg-red-500 hover:bg-red-600 text-white text-xs font-bold py-1.5 rounded shadow flex justify-center items-center gap-1" title="Cancelar (aberto por engano)"><i class="fa-solid fa-ban text-xs"></i> Cancelar</button>
                 </div>`;
             }
             return `<div class="bg-white dark:bg-gray-700 p-3 rounded-lg border border-gray-200 dark:border-gray-600 shadow-sm relative overflow-hidden"><div class="absolute top-0 left-0 w-1 h-full ${a.status === 'PAUSADO' ? 'bg-yellow-500' : 'bg-blue-500'}"></div><div class="text-xs text-blue-600 dark:text-blue-300 font-bold uppercase mb-1 ml-2"><i class="fa-solid fa-tag mr-1"></i>${a.tipo_nome}</div><div class="font-bold dark:text-white ml-2 text-lg">#${a.numero_atendimento}</div>${htmlPausa}${footerCard}</div>`;
@@ -328,6 +413,53 @@ window.finalizarAtendimento = async function(id) {
     if(!confirm("Deseja realmente encerrar este atendimento?")) return;
     const res = await fetch(`/api/atendimentos/${id}/finalizar`, { method: 'PUT' });
     if (res.ok) carregarPainelE_Fila();
+};
+
+window.abrirModalEditarAtendimento = async function(id, numeroAtual, tipoAtualId) {
+    document.getElementById('edit_atend_id').value = id;
+    document.getElementById('edit_atend_numero').value = numeroAtual;
+
+    // Buscar tipos diretamente da API (garante que o select sempre esteja preenchido)
+    const selectTipo = document.getElementById('edit_atend_tipo');
+    try {
+        const resT = await fetch('/api/tipos_atendimento');
+        const tipos = await resT.json();
+        selectTipo.innerHTML = tipos.map(t => `<option value="${t.id}">${t.nome}</option>`).join('');
+    } catch(e) {
+        selectTipo.innerHTML = '<option value="">Erro ao carregar tipos</option>';
+    }
+    selectTipo.value = tipoAtualId;
+
+    const form = document.getElementById('formEditarAtendimento');
+    form.onsubmit = async (e) => {
+        e.preventDefault();
+        const body = {
+            numero_atendimento: document.getElementById('edit_atend_numero').value,
+            tipo_id: document.getElementById('edit_atend_tipo').value
+        };
+        try {
+            const res = await fetch(`/api/atendimentos/${id}/editar`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body) });
+            if (res.ok) { document.getElementById('modalEditarAtendimento').classList.add('hidden'); carregarPainelE_Fila(); }
+            else { const err = await res.json().catch(() => ({})); alert('Erro ' + res.status + ': ' + (err.erro || 'Não foi possível salvar.')); }
+        } catch (e) { alert('Erro de conexão: ' + e.message); }
+    };
+
+    document.getElementById('modalEditarAtendimento').classList.remove('hidden');
+};
+
+window.abrirModalCancelarAtendimento = function(id, numero) {
+    document.getElementById('cancelar_atend_id').value = id;
+    document.getElementById('cancelar_atend_info').textContent = `#${numero}`;
+    document.getElementById('modalCancelarAtendimento').classList.remove('hidden');
+};
+
+window.confirmarCancelamento = async function() {
+    const id = document.getElementById('cancelar_atend_id').value;
+    try {
+        const res = await fetch(`/api/atendimentos/${id}`, { method: 'DELETE' });
+        if (res.ok) { document.getElementById('modalCancelarAtendimento').classList.add('hidden'); carregarPainelE_Fila(); }
+        else { alert('Erro ao cancelar o atendimento.'); }
+    } catch (e) { alert('Erro de conexão.'); }
 };
 
 function calcularTempoUtil(dataInicioISO, dataFimISO = null, tempoPausaMs = 0, inicioUltimaPausaISO = null, status = 'EM_ANDAMENTO') {
@@ -366,8 +498,6 @@ function formatarDataHora(dataISO) {
     if(!dataISO) return '--'; let strData = dataISO; if (!strData.includes('Z')) strData += 'Z';
     const d = new Date(strData); return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')} às ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
 }
-
-function atualizarCronometros() { document.querySelectorAll('.timer-calculado').forEach(t => { t.textContent = msParaTexto(calcularTempoUtil(t.getAttribute('data-inicio'))); }); }
 
 window.buscarRelatorios = async function() {
     const setor_id = document.getElementById('filtro-setor').value; const data_inicio = document.getElementById('filtro-data-inicio').value; const data_fim = document.getElementById('filtro-data-fim').value; const usuario_id = document.getElementById('filtro-analista').value; const tipo_id = document.getElementById('filtro-tipo').value;
@@ -651,3 +781,60 @@ window.exportarCSVEscala = function() {
     link.click();
     document.body.removeChild(link);
 };
+
+// ==========================================
+// FINALIZADOS HOJE
+// ==========================================
+async function carregarFinalizadosHoje() {
+    const corpo = document.getElementById('corpo-finalizados-hoje');
+    const resumo = document.getElementById('resumo-finalizados-hoje');
+    if (!corpo) return;
+
+    corpo.innerHTML = `<tr><td colspan="3" class="p-6 text-center text-gray-500"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Carregando...</td></tr>`;
+
+    const hoje = new Date().toISOString().split('T')[0];
+    const f = document.getElementById('filtro-setor');
+    const sid = (f && f.value) ? f.value : usuarioLogado.setor_id;
+
+    try {
+        let url = `/api/atendimentos/concluidos?data_inicio=${hoje}&data_fim=${hoje}`;
+        if (sid && sid !== 'todos') url += `&setor_id=${sid}`;
+        // Analista vê apenas os próprios
+        if (usuarioLogado.tipo_perfil !== 'ADMIN') url += `&usuario_id=${usuarioLogado.id}`;
+
+        const res = await fetch(url);
+        const dados = await res.json();
+
+        corpo.innerHTML = '';
+        if (!Array.isArray(dados) || dados.length === 0) {
+            corpo.innerHTML = `<tr><td colspan="3" class="p-6 text-center text-gray-400 italic"><i class="fa-regular fa-calendar-xmark mr-2"></i>Nenhum atendimento finalizado hoje.</td></tr>`;
+            if (resumo) resumo.textContent = '0';
+            return;
+        }
+
+        // Agrupar por analista para exibição
+        const porAnalista = {};
+        dados.forEach(a => {
+            if (!porAnalista[a.usuario_nome]) porAnalista[a.usuario_nome] = [];
+            porAnalista[a.usuario_nome].push(a);
+        });
+
+        Object.entries(porAnalista).forEach(([analista, atendimentos]) => {
+            // Linha de cabeçalho do analista
+            corpo.innerHTML += `<tr class="bg-blue-50 dark:bg-blue-900/20"><td colspan="3" class="px-4 py-2 font-bold text-blue-700 dark:text-blue-300 text-sm uppercase tracking-wide"><i class="fa-solid fa-user-tie mr-2"></i>${analista} <span class="ml-2 bg-blue-600 text-white text-xs px-2 py-0.5 rounded-full font-mono">${atendimentos.length}</span></td></tr>`;
+            atendimentos.forEach(a => {
+                corpo.innerHTML += `
+                    <tr class="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/40 transition">
+                        <td class="px-4 py-3 font-bold text-gray-800 dark:text-gray-100 font-mono">#${a.numero_atendimento}</td>
+                        <td class="px-4 py-3 text-gray-700 dark:text-gray-300">${a.usuario_nome}</td>
+                        <td class="px-4 py-3"><span class="bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 px-3 py-1 rounded-full text-xs font-bold">${a.tipo_nome}</span></td>
+                    </tr>`;
+            });
+        });
+
+        if (resumo) resumo.textContent = dados.length;
+    } catch (e) {
+        console.error(e);
+        corpo.innerHTML = `<tr><td colspan="3" class="p-6 text-center text-red-500 font-bold">Erro ao carregar dados.</td></tr>`;
+    }
+}

@@ -120,3 +120,15 @@ exports.excluirAtendimento = async (req, res) => {
         res.json({ sucesso: true });
     } catch (e) { res.status(500).json({erro: e.message}); }
 };
+
+exports.editarAtendimento = async (req, res) => {
+    try {
+        const { numero_atendimento, tipo_id } = req.body;
+        if (!numero_atendimento || !tipo_id) return res.status(400).json({ erro: 'Número do ticket e tipo são obrigatórios.' });
+        await pool.query(
+            `UPDATE atendimentos SET numero_atendimento = $1, tipo_id = $2 WHERE id = $3 AND status IN ('EM_ANDAMENTO', 'PAUSADO')`,
+            [numero_atendimento, tipo_id, req.params.id]
+        );
+        res.json({ sucesso: true });
+    } catch (e) { res.status(500).json({ erro: e.message }); }
+};
