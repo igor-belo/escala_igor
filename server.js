@@ -148,6 +148,16 @@ async function verificarNotificacoesPendentes() {
     } catch (e) { console.error('[Scheduler] Erro:', e.message); }
 }
 
+// Endpoint para ser chamado pelo Vercel Cron Job
+app.get('/api/cron/notificacoes', async (req, res) => {
+    try {
+        await verificarNotificacoesPendentes();
+        res.status(200).send('Cron de notificações executado com sucesso');
+    } catch (e) {
+        res.status(500).send(e.message);
+    }
+});
+
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, async () => {
