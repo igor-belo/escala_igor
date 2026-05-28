@@ -98,6 +98,7 @@ async function initEscalas() {
         if (usuarioLogado.tipo_perfil === 'ADMIN' || s.id == usuarioLogado.setor_id) { if(f) f.innerHTML += opt; if(o) o.innerHTML += opt; } 
         if(c) c.innerHTML += opt; 
     });
+    if (f && f.options.length > 1 && f.options[0].value === 'todos') { f.value = f.options[1].value; }
     const inputDataInicio = document.getElementById('data_inicio_geracao'); if(inputDataInicio) inputDataInicio.value = new Date().toISOString().split('T')[0];
 
     const calendarEl = document.getElementById('calendar'); if(!calendarEl) return;
@@ -274,6 +275,7 @@ async function initAtendimentos() {
         if (priSetor) priSetor.innerHTML = '';
         if (f) f.innerHTML = usuarioLogado.tipo_perfil === 'ADMIN' ? '<option value="todos">Todos os Setores</option>' : '';
         if (Array.isArray(setores)) { setores.forEach(s => { if (usuarioLogado.tipo_perfil === 'ADMIN' || s.id == usuarioLogado.setor_id) { if (f) f.innerHTML += `<option value="${s.id}">${s.nome}</option>`; } if (priSetor) priSetor.innerHTML += `<option value="${s.id}">${s.nome}</option>`; }); }
+        if (f && f.options.length > 1 && f.options[0].value === 'todos') { f.value = f.options[1].value; }
         if (f) f.addEventListener('change', carregarPainelE_Fila);
     } catch (erro) { console.error(erro); }
     await carregarTiposDeAtendimento(); carregarPainelE_Fila();
@@ -716,6 +718,7 @@ window.abrirModalRelatorioEscala = async function() {
             }
         });
     } catch(e) {}
+    if (selectSetor.options.length > 1 && selectSetor.options[0].value === 'todos') { selectSetor.value = selectSetor.options[1].value; }
     
     document.getElementById('corpo_relatorio_escala').innerHTML = '<tr><td colspan="5" class="p-6 text-center text-gray-500 italic">Preencha os filtros e clique em buscar.</td></tr>';
     dadosRelatorioEscalaBase = [];
