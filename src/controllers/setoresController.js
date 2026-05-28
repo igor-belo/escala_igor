@@ -11,14 +11,14 @@ exports.listarSetores = async (req, res) => {
 
 exports.criarSetor = async (req, res) => {
     try {
-        await pool.query('INSERT INTO setores (nome) VALUES ($1)', [req.body.nome]);
+        await pool.query('INSERT INTO setores (nome, webhook_url) VALUES ($1, $2)', [req.body.nome, req.body.webhook_url || null]);
         res.json({ sucesso: true });
     } catch (e) { res.status(500).json({erro: e.message}); }
 };
 
 exports.atualizarSetor = async (req, res) => {
     try {
-        await pool.query('UPDATE setores SET nome=$1 WHERE id=$2', [req.body.nome, req.params.id]);
+        await pool.query('UPDATE setores SET nome=$1, webhook_url=$2 WHERE id=$3', [req.body.nome, req.body.webhook_url || null, req.params.id]);
         res.json({ sucesso: true });
     } catch (e) { res.status(500).json({erro: e.message}); }
 };

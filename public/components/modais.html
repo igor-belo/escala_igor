@@ -70,12 +70,6 @@
                 <h3 class="font-bold mb-2 text-sm dark:text-gray-300">Expediente Semanal</h3>
                 <div id="gridHorarios" class="flex flex-col gap-2 mb-4"></div>
             </div>
-            <hr class="my-4 dark:border-gray-600">
-            <div class="mb-4">
-                <label class="block text-sm font-bold mb-1 dark:text-gray-300"><i class="fa-brands fa-google text-green-500 mr-1"></i>Webhook Google Chat (URL)</label>
-                <input type="url" id="webhook_url" placeholder="https://chat.googleapis.com/v1/spaces/..." class="w-full p-2 border rounded dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:border-blue-500 text-xs">
-                <p class="text-xs text-gray-400 mt-1">URL do webhook do Google Chat para receber notificações de agendamento.</p>
-            </div>
             <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded transition shadow mt-2">Salvar</button>
         </form>
     </div>
@@ -85,10 +79,13 @@
     <div class="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md shadow-xl relative max-h-[90vh] flex flex-col">
         <button onclick="voltarParaConfiguracoes('modalGerenciarSetores')" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800 dark:hover:text-white"><i class="fa-solid fa-arrow-left text-xl"></i></button>
         <h2 class="text-xl font-black mb-4 dark:text-white"><i class="fa-solid fa-building mr-2"></i>Setores</h2>
-        <div class="flex gap-2 mb-4">
-            <input type="text" id="novo_setor_nome" placeholder="Nome do Setor" class="flex-1 p-2 border rounded dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:border-blue-500">
-            <button onclick="salvarNovoSetor()" id="btnSalvarSetor" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition">Adicionar</button>
-            <button onclick="cancelarEdicaoSetor()" id="btnCancelarEdicaoSetor" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded transition hidden"><i class="fa-solid fa-xmark"></i></button>
+        <div class="flex flex-col gap-2 mb-4">
+            <input type="text" id="novo_setor_nome" placeholder="Nome do Setor" class="w-full p-2 border rounded dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:border-blue-500">
+            <input type="url" id="novo_setor_webhook" placeholder="Webhook URL Google Chat (Opcional)" class="w-full p-2 border rounded dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:border-blue-500 text-xs">
+            <div class="flex gap-2">
+                <button onclick="salvarNovoSetor()" id="btnSalvarSetor" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded transition">Adicionar</button>
+                <button onclick="cancelarEdicaoSetor()" id="btnCancelarEdicaoSetor" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded transition hidden"><i class="fa-solid fa-xmark"></i></button>
+            </div>
         </div>
         <ul id="lista_setores" class="flex-1 overflow-y-auto flex flex-col gap-2"></ul>
     </div>
@@ -122,8 +119,20 @@
                 <div class="w-32"><label class="block text-xs font-bold mb-1 dark:text-gray-300">Hora do Contato</label><input type="time" id="hora_do_aviso_novo" class="w-full p-2 border rounded dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:border-red-500"></div>
             </div>
 
-            <!-- Analista destinatário -->
-            <div class="mb-3"><label class="block text-xs font-bold mb-1 dark:text-gray-300">Analista Destinatário (Opcional)</label><select id="usuario_do_aviso_novo" class="w-full p-2 border rounded dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:border-red-500"></select></div>
+            <!-- Analista destinatário e Participantes -->
+            <div class="grid grid-cols-2 gap-3 mb-3">
+                <div><label class="block text-xs font-bold mb-1 dark:text-gray-300">Destinatário Principal</label><select id="usuario_do_aviso_novo" class="w-full p-2 border rounded dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:border-red-500 h-[38px]"></select></div>
+                <div class="relative">
+                    <label class="block text-xs font-bold mb-1 dark:text-gray-300">Outros Participantes</label>
+                    <div id="btn_dropdown_participantes" class="w-full p-2 border rounded bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:border-red-500 cursor-pointer flex justify-between items-center text-xs h-[38px]" onclick="document.getElementById('dropdown_participantes_lista').classList.toggle('hidden')">
+                        <span id="participantes_selecionados_texto" class="truncate block text-gray-500 dark:text-gray-400">Nenhum</span>
+                        <i class="fa-solid fa-chevron-down text-gray-400"></i>
+                    </div>
+                    <div id="dropdown_participantes_lista" class="absolute z-10 w-full bg-white dark:bg-gray-700 border dark:border-gray-600 rounded mt-1 hidden max-h-40 overflow-y-auto shadow-2xl p-2 flex flex-col gap-2 text-xs">
+                        <!-- Checkboxes inserted here via JS -->
+                    </div>
+                </div>
+            </div>
 
             <hr class="my-3 dark:border-gray-700">
             <p class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-3">Dados do Agendamento</p>

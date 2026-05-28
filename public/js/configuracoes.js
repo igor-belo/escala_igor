@@ -16,14 +16,16 @@ async function carregarListaSetoresConfig() {
         lista.innerHTML = '';
         setores.forEach(s => {
             const nomeSeguro = s.nome.replace(/'/g, "\\'");
-            lista.innerHTML += `<li class="flex justify-between items-center p-2 bg-gray-50 dark:bg-gray-700 rounded border dark:border-gray-600"><span class="dark:text-white font-bold">${s.nome}</span> <div class="flex gap-3"><button onclick="prepararEdicaoSetor(${s.id}, '${nomeSeguro}')" class="text-yellow-500 hover:text-yellow-600"><i class="fa-solid fa-pen"></i></button><button onclick="excluirSetor(${s.id})" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button></div></li>`;
+            const webhookIcon = s.webhook_url ? '<i class="fa-solid fa-bell text-green-500 mr-2" title="Webhook Configurado"></i>' : '';
+            lista.innerHTML += `<li class="flex justify-between items-center p-2 bg-gray-50 dark:bg-gray-700 rounded border dark:border-gray-600"><span class="dark:text-white font-bold">${webhookIcon}${s.nome}</span> <div class="flex gap-3"><button onclick="prepararEdicaoSetor(${s.id}, '${nomeSeguro}', '${s.webhook_url || ''}')" class="text-yellow-500 hover:text-yellow-600"><i class="fa-solid fa-pen"></i></button><button onclick="excluirSetor(${s.id})" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button></div></li>`;
         });
     } catch (e) { console.error(e); }
 }
 
-window.prepararEdicaoSetor = function(id, nome) {
+window.prepararEdicaoSetor = function(id, nome, webhook_url) {
     setorIdEmEdicao = id;
     document.getElementById('novo_setor_nome').value = nome;
+    document.getElementById('novo_setor_webhook').value = webhook_url || '';
     document.getElementById('btnSalvarSetor').innerText = 'Salvar';
     document.getElementById('btnSalvarSetor').classList.replace('bg-blue-600', 'bg-yellow-500');
     document.getElementById('btnSalvarSetor').classList.replace('hover:bg-blue-700', 'hover:bg-yellow-600');
@@ -33,6 +35,7 @@ window.prepararEdicaoSetor = function(id, nome) {
 window.cancelarEdicaoSetor = function() {
     setorIdEmEdicao = null;
     document.getElementById('novo_setor_nome').value = '';
+    document.getElementById('novo_setor_webhook').value = '';
     document.getElementById('btnSalvarSetor').innerText = 'Adicionar';
     document.getElementById('btnSalvarSetor').classList.replace('bg-yellow-500', 'bg-blue-600');
     document.getElementById('btnSalvarSetor').classList.replace('hover:bg-yellow-600', 'hover:bg-blue-700');
@@ -41,10 +44,11 @@ window.cancelarEdicaoSetor = function() {
 
 window.salvarNovoSetor = async function() {
     const nome = document.getElementById('novo_setor_nome').value;
+    const webhook_url = document.getElementById('novo_setor_webhook').value;
     if(!nome) return;
     try {
-        if (setorIdEmEdicao) { await fetch(`/api/setores/${setorIdEmEdicao}`, { method: 'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({nome}) }); }
-        else { await fetch('/api/setores', { method: 'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({nome}) }); }
+        if (setorIdEmEdicao) { await fetch(`/api/setores/${setorIdEmEdicao}`, { method: 'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({nome, webhook_url}) }); }
+        else { await fetch('/api/setores', { method: 'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({nome, webhook_url}) }); }
         cancelarEdicaoSetor();
         carregarListaSetoresConfig();
         if (typeof initAtendimentos === 'function') initAtendimentos();

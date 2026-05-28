@@ -61,11 +61,30 @@ function setupGlobal() {
     if(selectSetorAviso) { selectSetorAviso.addEventListener('change', (e) => { preencherUsuariosAviso(e.target.value); }); }
 }
 
-async function preencherUsuariosAviso(setorId, usuarioSelecionadoId = '') {
-    const select = document.getElementById('usuario_do_aviso_novo'); if(!select) return; select.innerHTML = '<option value="">Geral (Todos)</option>';
+window.atualizarTextoParticipantes = function() {
+    const checkboxes = document.querySelectorAll('.cb-participante:checked');
+    const span = document.getElementById('participantes_selecionados_texto');
+    if (!span) return;
+    if (checkboxes.length === 0) { span.textContent = 'Nenhum'; span.classList.add('text-gray-500'); span.classList.remove('text-gray-800', 'dark:text-white', 'font-bold'); }
+    else if (checkboxes.length === 1) { span.textContent = checkboxes[0].dataset.nome; span.classList.remove('text-gray-500'); span.classList.add('text-gray-800', 'dark:text-white', 'font-bold'); }
+    else { span.textContent = `${checkboxes.length} selecionados`; span.classList.remove('text-gray-500'); span.classList.add('text-gray-800', 'dark:text-white', 'font-bold'); }
+};
+
+async function preencherUsuariosAviso(setorId, usuarioSelecionadoId = '', participantesIds = []) {
+    const select = document.getElementById('usuario_do_aviso_novo');
+    const listaPart = document.getElementById('dropdown_participantes_lista');
+    if(select) select.innerHTML = '<option value="">Nenhum (Geral)</option>';
+    if(listaPart) listaPart.innerHTML = '';
     try {
         const res = await fetch('/api/usuarios'); const usuarios = await res.json();
-        usuarios.filter(u => u.setor_id == setorId && u.tipo_perfil === 'ANALISTA').forEach(u => { select.innerHTML += `<option value="${u.id}" ${u.id == usuarioSelecionadoId ? 'selected' : ''}>${u.nome}</option>`; });
+        usuarios.filter(u => u.setor_id == setorId).forEach(u => { 
+            if(select) select.innerHTML += `<option value="${u.id}" ${u.id == usuarioSelecionadoId ? 'selected' : ''}>${u.nome}</option>`; 
+            if(listaPart) {
+                const isChecked = participantesIds.includes(u.id) ? 'checked' : '';
+                listaPart.innerHTML += `<label class="flex items-center gap-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 p-1.5 rounded transition"><input type="checkbox" value="${u.id}" data-nome="${u.nome}" class="cb-participante w-3.5 h-3.5 text-blue-600 rounded dark:bg-gray-800 border-gray-300 dark:border-gray-500" onchange="atualizarTextoParticipantes()" ${isChecked}> <span class="dark:text-gray-200 truncate font-medium">${u.nome}</span></label>`;
+            }
+        });
+        atualizarTextoParticipantes();
     } catch(e) {}
 }
 
@@ -106,7 +125,7 @@ async function initEscalas() {
                     let t = o.assunto || o.observacao;
                     if(o.nome) t = `${o.nome}: ${t}`;
                     if (o.hora) { t = `[${o.hora.substring(0, 5)}] ⚠️ ${t}`; } else { t = `⚠️ ${t}`; }
-                    return { id: `obs_${o.id}`, title: t, start: o.data, color: '#ef4444', ordem_exibicao: 2, classNames: ['evento-aviso'], extendedProps: { tipo: 'observacao_dia', id_real: o.id, observacao: o.observacao, setor_id: o.setor_id, data: o.data, usuario_id: o.usuario_id, hora: o.hora ? o.hora.substring(0, 5) : '', nome_analista: o.nome || '', crm: o.crm || '', numero_atendimento: o.numero_atendimento || '', assunto: o.assunto || '', numero_contato: o.numero_contato || '', cliente_responsavel: o.cliente_responsavel || '', analista_contato: o.analista_contato || '' } };
+                    return { id: `obs_${o.id}`, title: t, start: o.data, color: '#ef4444', ordem_exibicao: 2, classNames: ['evento-aviso'], extendedProps: { tipo: 'observacao_dia', id_real: o.id, observacao: o.observacao, setor_id: o.setor_id, data: o.data, usuario_id: o.usuario_id, hora: o.hora ? o.hora.substring(0, 5) : '', nome_analista: o.nome || '', crm: o.crm || '', numero_atendimento: o.numero_atendimento || '', assunto: o.assunto || '', numero_contato: o.numero_contato || '', cliente_responsavel: o.cliente_responsavel || '', analista_contato: o.analista_contato || '', participantes: o.participantes || [] } };
                 })); }
                 success(todosEventos);
             } catch (e) { failure(e); }
@@ -144,7 +163,7 @@ async function initEscalas() {
                 document.getElementById('aviso_numero_contato').value = ep.numero_contato || '';
                 document.getElementById('aviso_cliente_responsavel').value = ep.cliente_responsavel || '';
                 document.getElementById('aviso_analista_contato').value = ep.analista_contato || '';
-                await preencherUsuariosAviso(ep.setor_id, ep.usuario_id);
+                await preencherUsuariosAviso(ep.setor_id, ep.usuario_id, ep.participantes);
                 const [a, m, d] = ep.data.split('-');
                 document.getElementById('tituloModalObs').textContent = `Editar Aviso: ${d}/${m}/${a}`;
                 document.getElementById('btnExcluirObs').classList.remove('hidden');
@@ -195,6 +214,9 @@ async function salvarAviso(e) {
     e.preventDefault();
     const uv = document.getElementById('usuario_do_aviso_novo').value;
     const hv = document.getElementById('hora_do_aviso_novo').value;
+    const cbPart = document.querySelectorAll('.cb-participante:checked');
+    const participantesIds = Array.from(cbPart).map(cb => parseInt(cb.value));
+    
     const body = {
         id: document.getElementById('id_do_aviso_novo').value || null,
         data: document.getElementById('data_do_aviso_novo').value,
@@ -208,7 +230,8 @@ async function salvarAviso(e) {
         numero_contato: document.getElementById('aviso_numero_contato').value || null,
         cliente_responsavel: document.getElementById('aviso_cliente_responsavel').value || null,
         analista_contato: document.getElementById('aviso_analista_contato').value || null,
-        criado_por: usuarioLogado.id
+        criado_por: usuarioLogado.id,
+        participantes: participantesIds
     };
     const res = await fetch('/api/observacoes', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body) });
     if (res.ok) { document.getElementById('modalObsDia').classList.add('hidden'); calendar.refetchEvents(); } else { alert('Erro ao salvar aviso.'); }

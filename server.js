@@ -38,7 +38,8 @@ async function runMigrations() {
         `ALTER TABLE observacoes_dia ADD COLUMN IF NOT EXISTS analista_contato TEXT`,
         `ALTER TABLE observacoes_dia ADD COLUMN IF NOT EXISTS notificado BOOLEAN DEFAULT FALSE`,
         `ALTER TABLE observacoes_dia ADD COLUMN IF NOT EXISTS criado_por INTEGER`,
-        `ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS webhook_url TEXT`
+        `ALTER TABLE observacoes_dia ADD COLUMN IF NOT EXISTS participantes JSONB DEFAULT '[]'::jsonb`,
+        `ALTER TABLE setores ADD COLUMN IF NOT EXISTS webhook_url TEXT`
     ];
     for (const sql of migrations) {
         try { await pool.query(sql); } catch (e) { console.error('[Migration]', sql, e.message); }
@@ -69,9 +70,10 @@ function enviarWebhook(webhookUrl, mensagem) {
     } catch (e) { console.error('[Webhook] Erro ao montar requisição:', e.message); }
 }
 
-function formatarMensagemChat(obs, nomeAnalistaDestinatario) {
+function formatarMensagemChat(obs, nomeAnalistaDestinatario, emailAnalista, mencoesExtras = '') {
     const dataBr = obs.data ? obs.data.split('-').reverse().join('/') : '--';
-    return `🗓️ *LEMBRETE DE AGENDAMENTO — 15 minutos*\n\n` +
+    let msg = `🗓️ *LEMBRETE DE AGENDAMENTO — 15 minutos*\n\n` +
+        `*Setor:* ${obs.nome_setor || '--'}\n` +
         `*CRM:* ${obs.crm || '--'}\n` +
         `*Atendimento:* ${obs.numero_atendimento || '--'}\n` +
         `*Assunto:* ${obs.assunto || '--'}\n` +
@@ -79,8 +81,14 @@ function formatarMensagemChat(obs, nomeAnalistaDestinatario) {
         `*Hora do contato:* ${obs.hora ? obs.hora.substring(0, 5) : '--'}\n` +
         `*Número de contato:* ${obs.numero_contato || '--'}\n` +
         `*Cliente responsável:* ${obs.cliente_responsavel || '--'}\n` +
-        `*Analista de contato:* ${nomeAnalistaDestinatario || obs.analista_contato || '--'}\n` +
-        `*Alguma observação:* ${obs.observacao || '--'}`;
+        `*Analista de contato:* ${nomeAnalistaDestinatario || obs.analista_contato || '--'}\n`;
+        
+    if (mencoesExtras.trim()) {
+        msg += `*Participantes:* ${mencoesExtras.trim()}\n`;
+    }
+    
+    msg += `*Alguma observação:* ${obs.observacao || '--'}`;
+    return msg;
 }
 
 // ==========================================
@@ -101,12 +109,12 @@ async function verificarNotificacoesPendentes() {
                    TO_CHAR(o.hora, 'HH24:MI') AS hora,
                    o.observacao, o.crm, o.numero_atendimento, o.assunto,
                    o.numero_contato, o.cliente_responsavel, o.analista_contato,
-                   o.usuario_id, o.criado_por,
-                   u_dest.nome AS nome_analista, u_dest.webhook_url AS webhook_analista,
-                   u_cria.nome AS nome_criador, u_cria.webhook_url AS webhook_criador
+                   o.usuario_id, o.criado_por, o.participantes,
+                   u_dest.nome AS nome_analista, u_dest.email AS email_analista,
+                   s.nome AS nome_setor, s.webhook_url AS webhook_setor
             FROM observacoes_dia o
             LEFT JOIN usuarios u_dest ON o.usuario_id = u_dest.id
-            LEFT JOIN usuarios u_cria ON o.criado_por = u_cria.id
+            LEFT JOIN setores s ON o.setor_id = s.id
             WHERE o.notificado = FALSE
               AND o.hora IS NOT NULL
               AND (o.data + o.hora) BETWEEN
@@ -115,16 +123,23 @@ async function verificarNotificacoesPendentes() {
         `);
 
         for (const obs of resultado.rows) {
-            console.log(`[Scheduler] Notificando observação ID ${obs.id} — ${obs.assunto || obs.observacao}`);
-            const mensagem = formatarMensagemChat(obs, obs.nome_analista);
-
-            // Envia para o analista destinatário
-            if (obs.webhook_analista) {
-                enviarWebhook(obs.webhook_analista, mensagem);
+            let mencoesExtras = '';
+            if (obs.participantes && Array.isArray(obs.participantes) && obs.participantes.length > 0) {
+                try {
+                    const resPart = await pool.query('SELECT nome FROM usuarios WHERE id = ANY($1::int[])', [obs.participantes]);
+                    for (const p of resPart.rows) {
+                        if (p.nome && p.nome !== obs.nome_analista) mencoesExtras += `${p.nome}, `;
+                    }
+                    if (mencoesExtras.endsWith(', ')) mencoesExtras = mencoesExtras.slice(0, -2);
+                } catch(err) { console.error('[Scheduler] Erro ao buscar participantes extras:', err.message); }
             }
-            // Envia para quem criou (admin), se diferente
-            if (obs.webhook_criador && obs.criado_por !== obs.usuario_id) {
-                enviarWebhook(obs.webhook_criador, mensagem);
+
+            console.log(`[Scheduler] Notificando observação ID ${obs.id} — ${obs.assunto || obs.observacao}`);
+            const mensagem = formatarMensagemChat(obs, obs.nome_analista, obs.email_analista, mencoesExtras);
+
+            // Envia para o webhook configurado no setor
+            if (obs.webhook_setor) {
+                enviarWebhook(obs.webhook_setor, mensagem);
             }
 
             // Marca como notificado
