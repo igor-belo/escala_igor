@@ -63,7 +63,6 @@ window.prepararEdicao = async function(id) {
             document.getElementById('fixa_fim').value = u.fixa_fim ? u.fixa_fim.split('T')[0] : '';
             if(u.horarios_semana) { Object.keys(u.horarios_semana).forEach(diaId => { const h = u.horarios_semana[diaId]; document.getElementById(`ativo_${diaId}`).checked = h.ativo; document.getElementById(`ent_${diaId}`).value = h.entrada; document.getElementById(`alm_s_${diaId}`).value = h.almoco_saida; document.getElementById(`alm_r_${diaId}`).value = h.almoco_retorno; document.getElementById(`sai_${diaId}`).value = h.saida; }); }
         } else { camposA.classList.add('hidden'); }
-        document.getElementById('webhook_url').value = u.webhook_url || '';
         fecharModalLista(); document.getElementById('modalCadastro').classList.remove('hidden');
     } catch (e) { console.error(e); }
 };
@@ -73,7 +72,7 @@ window.salvarUsuario = async function(e) {
     const tipoP = document.getElementById('tipo_perfil').value;
     const hs = {};
     if(tipoP === 'ANALISTA') { dias.forEach(d => { hs[d.id] = { ativo: document.getElementById(`ativo_${d.id}`).checked, entrada: document.getElementById(`ent_${d.id}`).value, almoco_saida: document.getElementById(`alm_s_${d.id}`).value, almoco_retorno: document.getElementById(`alm_r_${d.id}`).value, saida: document.getElementById(`sai_${d.id}`).value }; }); }
-    const body = { nome: document.getElementById('nome').value, email: document.getElementById('email').value, tipo_perfil: tipoP, setor_id: tipoP === 'ANALISTA' ? document.getElementById('setor_id_cadastro').value : null, horarios_semana: tipoP === 'ANALISTA' ? hs : null, funcao_fixa: document.getElementById('funcao_fixa').value, fixa_inicio: document.getElementById('fixa_inicio').value, fixa_fim: document.getElementById('fixa_fim').value, ativo: document.getElementById('usuario_ativo').checked, webhook_url: document.getElementById('webhook_url').value || null };
+    const body = { nome: document.getElementById('nome').value, email: document.getElementById('email').value, tipo_perfil: tipoP, setor_id: tipoP === 'ANALISTA' ? document.getElementById('setor_id_cadastro').value : null, horarios_semana: tipoP === 'ANALISTA' ? hs : null, funcao_fixa: document.getElementById('funcao_fixa').value, fixa_inicio: document.getElementById('fixa_inicio').value, fixa_fim: document.getElementById('fixa_fim').value, ativo: document.getElementById('usuario_ativo').checked };
     try {
         const res = await fetch(usuarioIdEmEdicao ? `/api/usuarios/${usuarioIdEmEdicao}` : '/api/usuarios', { method: usuarioIdEmEdicao ? 'PUT' : 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body) });
         if (res.ok) { alert(usuarioIdEmEdicao ? 'Atualizado!' : 'Cadastrado!'); fecharModalCadastro(); await carregarTabelaUsuarios(); } else { const err = await res.json(); alert(err.erro); }
