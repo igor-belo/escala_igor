@@ -51,23 +51,32 @@ async function runMigrations() {
 // WEBHOOK — Envia mensagem para Google Chat
 // ==========================================
 function enviarWebhook(webhookUrl, mensagem) {
-    if (!webhookUrl) return;
-    try {
-        const payload = JSON.stringify({ text: mensagem });
-        const url = new URL(webhookUrl);
-        const options = {
-            hostname: url.hostname,
-            path: url.pathname + url.search,
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(payload) }
-        };
-        const req = https.request(options, (res) => {
-            console.log(`[Webhook] Status: ${res.statusCode}`);
-        });
-        req.on('error', (e) => console.error('[Webhook] Erro:', e.message));
-        req.write(payload);
-        req.end();
-    } catch (e) { console.error('[Webhook] Erro ao montar requisição:', e.message); }
+    return new Promise((resolve, reject) => {
+        if (!webhookUrl) return resolve();
+        try {
+            const payload = JSON.stringify({ text: mensagem });
+            const url = new URL(webhookUrl);
+            const options = {
+                hostname: url.hostname,
+                path: url.pathname + url.search,
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(payload) }
+            };
+            const req = https.request(options, (res) => {
+                console.log(`[Webhook] Status: ${res.statusCode}`);
+                resolve();
+            });
+            req.on('error', (e) => {
+                console.error('[Webhook] Erro:', e.message);
+                resolve(); // resolvemos mesmo com erro para não travar o loop
+            });
+            req.write(payload);
+            req.end();
+        } catch (e) {
+            console.error('[Webhook] Erro ao montar requisição:', e.message);
+            resolve();
+        }
+    });
 }
 
 function formatarMensagemChat(obs, nomeAnalistaDestinatario, emailAnalista, mencoesExtras = '') {
@@ -139,7 +148,7 @@ async function verificarNotificacoesPendentes() {
 
             // Envia para o webhook configurado no setor
             if (obs.webhook_setor) {
-                enviarWebhook(obs.webhook_setor, mensagem);
+                await enviarWebhook(obs.webhook_setor, mensagem);
             }
 
             // Marca como notificado
