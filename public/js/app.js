@@ -318,6 +318,7 @@ window.mudarAba = function(aba) {
         if (areaRelatorios) areaRelatorios.classList.remove('hidden');
         if (areaImpressao) areaImpressao.classList.remove('hidden');
         if (!document.getElementById('filtro-data-inicio').value) { document.getElementById('filtro-data-inicio').value = new Date().toISOString().split('T')[0]; document.getElementById('filtro-data-fim').value = new Date().toISOString().split('T')[0]; }
+        if (typeof buscarRelatorios === 'function') buscarRelatorios();
     } else if (aba === 'finalizados') {
         if (btnFinalizados) { btnFinalizados.classList.replace('border-transparent', 'border-blue-600'); btnFinalizados.classList.replace('text-gray-500', 'text-blue-600'); }
         if (areaFinalizados) areaFinalizados.classList.remove('hidden');
