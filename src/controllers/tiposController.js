@@ -1,33 +1,1 @@
-const pool = require('../config/db');
-
-exports.listarTipos = async (req, res) => {
-    try {
-        const result = await pool.query('SELECT * FROM tipos_atendimento ORDER BY nome');
-        res.json(result.rows);
-    } catch (e) {
-        res.status(500).json({erro: e.message});
-    }
-};
-
-exports.criarTipo = async (req, res) => {
-    try {
-        await pool.query('INSERT INTO tipos_atendimento (nome) VALUES ($1)', [req.body.nome]);
-        res.json({ sucesso: true });
-    } catch (e) { res.status(500).json({erro: e.message}); }
-};
-
-exports.atualizarTipo = async (req, res) => {
-    try {
-        await pool.query('UPDATE tipos_atendimento SET nome=$1 WHERE id=$2', [req.body.nome, req.params.id]);
-        res.json({ sucesso: true });
-    } catch (e) { res.status(500).json({erro: e.message}); }
-};
-
-exports.deletarTipo = async (req, res) => {
-    try {
-        await pool.query('DELETE FROM tipos_atendimento WHERE id=$1', [req.params.id]);
-        res.json({ sucesso: true });
-    } catch (e) { 
-        res.status(500).json({erro: "Não é possível excluir um tipo que já foi usado em atendimentos."}); 
-    }
-};
+const pool = require('../config/db');exports.listarTipos = async (req, res) => {    try {        const result = await pool.query('SELECT * FROM tipos_atendimento ORDER BY nome');        res.json(result.rows);    } catch (e) {        res.status(500).json({erro: e.message});    }};exports.criarTipo = async (req, res) => {    try {        await pool.query('INSERT INTO tipos_atendimento (nome) VALUES ($1)', [req.body.nome]);        res.json({ sucesso: true });    } catch (e) { res.status(500).json({erro: e.message}); }};exports.atualizarTipo = async (req, res) => {    try {        await pool.query('UPDATE tipos_atendimento SET nome=$1 WHERE id=$2', [req.body.nome, req.params.id]);        res.json({ sucesso: true });    } catch (e) { res.status(500).json({erro: e.message}); }};exports.deletarTipo = async (req, res) => {    try {        await pool.query('DELETE FROM tipos_atendimento WHERE id=$1', [req.params.id]);        res.json({ sucesso: true });    } catch (e) {         res.status(500).json({erro: "Não é possível excluir um tipo que já foi usado em atendimentos."});     }};

@@ -1,35 +1,1 @@
-// Arquivo: src/controllers/authController.js
-const pool = require('../config/db');
-const bcrypt = require('bcryptjs');
-
-exports.login = async (req, res) => {
-    try {
-        const { identificador, senha } = req.body;
-        const resUser = await pool.query('SELECT * FROM usuarios WHERE email = $1 OR login = $1', [identificador]);
-        if (resUser.rows.length === 0) return res.status(401).json({ erro: 'Usuário não encontrado' });
-        
-        const usuario = resUser.rows[0];
-        if (usuario.ativo === false) return res.status(403).json({ erro: 'Usuário inativo. Procure o administrador.' });
-        
-        const senhaValida = await bcrypt.compare(senha, usuario.senha);
-        if (!senhaValida) return res.status(401).json({ erro: 'Senha incorreta' });
-        
-        delete usuario.senha; 
-        res.json({ sucesso: true, usuario });
-    } catch (erro) { 
-        console.log("ERRO REAL NO LOGIN:", erro); // <-- ESSA É A LINHA SALVADORA
-        res.status(500).json({ erro: 'Erro no servidor' }); 
-    }
-};
-
-exports.alterarSenha = async (req, res) => {
-    try {
-        const { id, novaSenha } = req.body;
-        const senhaCripto = await bcrypt.hash(novaSenha, 10);
-        await pool.query('UPDATE usuarios SET senha = $1, primeiro_acesso = false WHERE id = $2', [senhaCripto, id]);
-        res.json({ sucesso: true });
-    } catch (erro) { 
-        console.log("ERRO AO ALTERAR SENHA:", erro); 
-        res.status(500).json({ erro: 'Erro ao alterar a senha' }); 
-    }
-};
+const pool = require('../config/db');const bcrypt = require('bcryptjs');exports.login = async (req, res) => {    try {        const { identificador, senha } = req.body;        const resUser = await pool.query('SELECT * FROM usuarios WHERE email = $1 OR login = $1', [identificador]);        if (resUser.rows.length === 0) return res.status(401).json({ erro: 'Usuário não encontrado' });        const usuario = resUser.rows[0];        if (usuario.ativo === false) return res.status(403).json({ erro: 'Usuário inativo. Procure o administrador.' });        const senhaValida = await bcrypt.compare(senha, usuario.senha);        if (!senhaValida) return res.status(401).json({ erro: 'Senha incorreta' });        delete usuario.senha;         res.json({ sucesso: true, usuario });    } catch (erro) {         console.log("ERRO REAL NO LOGIN:", erro);         res.status(500).json({ erro: 'Erro no servidor' });     }};exports.alterarSenha = async (req, res) => {    try {        const { id, novaSenha } = req.body;        const senhaCripto = await bcrypt.hash(novaSenha, 10);        await pool.query('UPDATE usuarios SET senha = $1, primeiro_acesso = false WHERE id = $2', [senhaCripto, id]);        res.json({ sucesso: true });    } catch (erro) {         console.log("ERRO AO ALTERAR SENHA:", erro);         res.status(500).json({ erro: 'Erro ao alterar a senha' });     }};

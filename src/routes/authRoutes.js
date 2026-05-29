@@ -1,8 +1,1 @@
-const express = require('express');
-const router = express.Router();
-const authController = require('../controllers/authController');
-
-router.post('/login', authController.login);
-router.post('/alterar-senha', authController.alterarSenha);
-
-module.exports = router;
+const express = require('express');const router = express.Router();const authController = require('../controllers/authController');router.post('/login', authController.login);router.post('/alterar-senha', authController.alterarSenha);module.exports = router;

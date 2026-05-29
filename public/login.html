@@ -1,165 +1,1 @@
-<!DOCTYPE html>
-<html lang="pt-BR" class="light">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Sistema de Escala</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = { darkMode: 'class' }
-    </script>
-<script>
-    if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-        document.documentElement.classList.add('dark');
-    } else {
-        document.documentElement.classList.remove('dark');
-    }
-</script>
-</head>
-<body class="bg-gray-100 dark:bg-gray-900 flex items-center justify-center min-h-screen  relative">
-
-    <button id="btnDarkMode" class="absolute top-4 right-4 p-2 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 transition">
-        🌓 Tema
-    </button>
-
-    <div class="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md w-full max-w-sm ">
-        
-        <div id="container-login">
-            <h2 class="text-2xl font-bold text-gray-800 dark:text-white text-center mb-6">Acesso ao Sistema</h2>
-            
-            <form id="formLogin" class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">E-mail ou Login</label>
-                    <input type="text" id="identificador" required class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm p-2 border focus:border-blue-500 focus:ring-blue-500">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Senha</label>
-                    <input type="password" id="senha" required class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm p-2 border focus:border-blue-500 focus:ring-blue-500">
-                </div>
-                
-                <button type="submit" class="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded hover:bg-blue-700 transition">
-                    Entrar
-                </button>
-            </form>
-            <div id="msg-erro-login" class="mt-4 text-center text-red-600 dark:text-red-400 font-medium hidden"></div>
-        </div>
-
-        <div id="container-troca-senha" class="hidden">
-            <h2 class="text-xl font-bold text-gray-800 dark:text-white text-center mb-2">Primeiro Acesso</h2>
-            <p class="text-sm text-gray-600 dark:text-gray-400 text-center mb-6">Por favor, crie uma nova senha de acesso.</p>
-            
-            <form id="formTrocaSenha" class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nova Senha</label>
-                    <input type="password" id="novaSenha" required minlength="6" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm p-2 border focus:border-blue-500 focus:ring-blue-500">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Confirmar Nova Senha</label>
-                    <input type="password" id="confirmaSenha" required minlength="6" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm p-2 border focus:border-blue-500 focus:ring-blue-500">
-                </div>
-                
-                <button type="submit" class="w-full bg-green-600 text-white font-bold py-2 px-4 rounded hover:bg-green-700 transition">
-                    Salvar Senha e Entrar
-                </button>
-            </form>
-            <div id="msg-erro-senha" class="mt-4 text-center text-red-600 dark:text-red-400 font-medium hidden"></div>
-        </div>
-
-    </div>
-
-    <script>
-        const html = document.documentElement;
-        const btnDarkMode = document.getElementById('btnDarkMode');
-
-        if(localStorage.getItem('tema') === 'dark') {
-            html.classList.add('dark');
-        }
-
-        btnDarkMode.addEventListener('click', () => {
-            html.classList.toggle('dark');
-            if(html.classList.contains('dark')) {
-                localStorage.setItem('tema', 'dark');
-            } else {
-                localStorage.setItem('tema', 'light');
-            }
-        });
-
-        let usuarioTemporario = null;
-
-        document.getElementById('formLogin').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const identificador = document.getElementById('identificador').value;
-            const senha = document.getElementById('senha').value;
-            const msgErro = document.getElementById('msg-erro-login');
-
-            try {
-                const resposta = await fetch('/api/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ identificador, senha })
-                });
-
-                const dados = await resposta.json();
-
-                if (resposta.ok) {
-                    usuarioTemporario = dados.usuario;
-                    if (usuarioTemporario.primeiro_acesso) {
-                        document.getElementById('container-login').classList.add('hidden');
-                        document.getElementById('container-troca-senha').classList.remove('hidden');
-                    } else {
-                        localStorage.setItem('usuarioLogado', JSON.stringify(usuarioTemporario));
-                        window.location.href = 'index.html'; 
-                    }
-                } else {
-                    msgErro.textContent = dados.erro;
-                    msgErro.classList.remove('hidden');
-                }
-            } catch (erro) {
-                msgErro.textContent = "Erro ao conectar com o servidor.";
-                msgErro.classList.remove('hidden');
-            }
-        });
-
-        document.getElementById('formTrocaSenha').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const novaSenha = document.getElementById('novaSenha').value;
-            const confirmaSenha = document.getElementById('confirmaSenha').value;
-            const msgErro = document.getElementById('msg-erro-senha');
-
-            if (novaSenha !== confirmaSenha) {
-                msgErro.textContent = "As senhas não conferem!";
-                msgErro.classList.remove('hidden');
-                return;
-            }
-
-            try {
-                const resposta = await fetch('/api/alterar-senha', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id: usuarioTemporario.id, novaSenha: novaSenha })
-                });
-
-                if (resposta.ok) {
-                    usuarioTemporario.primeiro_acesso = false;
-                    localStorage.setItem('usuarioLogado', JSON.stringify(usuarioTemporario));
-                    alert("Senha alterada com sucesso! Bem-vindo.");
-                    window.location.href = 'index.html';
-                } else {
-                    msgErro.textContent = "Erro ao alterar a senha.";
-                    msgErro.classList.remove('hidden');
-                }
-            } catch (erro) {
-                msgErro.textContent = "Erro ao conectar com o servidor.";
-                msgErro.classList.remove('hidden');
-            }
-        });
-    </script>
-    <script src="/js/security.js"></script>
-    <script src="/js/auth.js"></script>
-    <script src="/js/usuarios.js"></script>
-    <script src="/js/configuracoes.js"></script>
-    <script src="/js/app.js"></script>
-
-</body>
-</body>
-</html>
+<!DOCTYPE html><html lang="pt-BR" class="light"><head>    <meta charset="UTF-8">    <meta name="viewport" content="width=device-width, initial-scale=1.0">    <title>Login - Sistema de Escala</title>    <script src="https://cdn.tailwindcss.com"></script>    <script>        tailwind.config = { darkMode: 'class' }    </script><script>    if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {        document.documentElement.classList.add('dark');    } else {        document.documentElement.classList.remove('dark');    }</script></head><body class="bg-gray-100 dark:bg-gray-900 flex items-center justify-center min-h-screen  relative">    <button id="btnDarkMode" class="absolute top-4 right-4 p-2 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 transition">        🌓 Tema    </button>    <div class="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md w-full max-w-sm ">        <div id="container-login">            <h2 class="text-2xl font-bold text-gray-800 dark:text-white text-center mb-6">Acesso ao Sistema</h2>            <form id="formLogin" class="space-y-4">                <div>                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">E-mail ou Login</label>                    <input type="text" id="identificador" required class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm p-2 border focus:border-blue-500 focus:ring-blue-500">                </div>                <div>                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Senha</label>                    <input type="password" id="senha" required class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm p-2 border focus:border-blue-500 focus:ring-blue-500">                </div>                <button type="submit" class="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded hover:bg-blue-700 transition">                    Entrar                </button>            </form>            <div id="msg-erro-login" class="mt-4 text-center text-red-600 dark:text-red-400 font-medium hidden"></div>        </div>        <div id="container-troca-senha" class="hidden">            <h2 class="text-xl font-bold text-gray-800 dark:text-white text-center mb-2">Primeiro Acesso</h2>            <p class="text-sm text-gray-600 dark:text-gray-400 text-center mb-6">Por favor, crie uma nova senha de acesso.</p>            <form id="formTrocaSenha" class="space-y-4">                <div>                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nova Senha</label>                    <input type="password" id="novaSenha" required minlength="6" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm p-2 border focus:border-blue-500 focus:ring-blue-500">                </div>                <div>                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Confirmar Nova Senha</label>                    <input type="password" id="confirmaSenha" required minlength="6" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm p-2 border focus:border-blue-500 focus:ring-blue-500">                </div>                <button type="submit" class="w-full bg-green-600 text-white font-bold py-2 px-4 rounded hover:bg-green-700 transition">                    Salvar Senha e Entrar                </button>            </form>            <div id="msg-erro-senha" class="mt-4 text-center text-red-600 dark:text-red-400 font-medium hidden"></div>        </div>    </div>    <script>        const html = document.documentElement;        const btnDarkMode = document.getElementById('btnDarkMode');        if(localStorage.getItem('tema') === 'dark') {            html.classList.add('dark');        }        btnDarkMode.addEventListener('click', () => {            html.classList.toggle('dark');            if(html.classList.contains('dark')) {                localStorage.setItem('tema', 'dark');            } else {                localStorage.setItem('tema', 'light');            }        });        let usuarioTemporario = null;        document.getElementById('formLogin').addEventListener('submit', async function(e) {            e.preventDefault();            const identificador = document.getElementById('identificador').value;            const senha = document.getElementById('senha').value;            const msgErro = document.getElementById('msg-erro-login');            try {                const resposta = await fetch('/api/login', {                    method: 'POST',                    headers: { 'Content-Type': 'application/json' },                    body: JSON.stringify({ identificador, senha })                });                const dados = await resposta.json();                if (resposta.ok) {                    usuarioTemporario = dados.usuario;                    if (usuarioTemporario.primeiro_acesso) {                        document.getElementById('container-login').classList.add('hidden');                        document.getElementById('container-troca-senha').classList.remove('hidden');                    } else {                        localStorage.setItem('usuarioLogado', JSON.stringify(usuarioTemporario));                        window.location.href = 'index.html';                     }                } else {                    msgErro.textContent = dados.erro;                    msgErro.classList.remove('hidden');                }            } catch (erro) {                msgErro.textContent = "Erro ao conectar com o servidor.";                msgErro.classList.remove('hidden');            }        });        document.getElementById('formTrocaSenha').addEventListener('submit', async function(e) {            e.preventDefault();            const novaSenha = document.getElementById('novaSenha').value;            const confirmaSenha = document.getElementById('confirmaSenha').value;            const msgErro = document.getElementById('msg-erro-senha');            if (novaSenha !== confirmaSenha) {                msgErro.textContent = "As senhas não conferem!";                msgErro.classList.remove('hidden');                return;            }            try {                const resposta = await fetch('/api/alterar-senha', {                    method: 'POST',                    headers: { 'Content-Type': 'application/json' },                    body: JSON.stringify({ id: usuarioTemporario.id, novaSenha: novaSenha })                });                if (resposta.ok) {                    usuarioTemporario.primeiro_acesso = false;                    localStorage.setItem('usuarioLogado', JSON.stringify(usuarioTemporario));                    alert("Senha alterada com sucesso! Bem-vindo.");                    window.location.href = 'index.html';                } else {                    msgErro.textContent = "Erro ao alterar a senha.";                    msgErro.classList.remove('hidden');                }            } catch (erro) {                msgErro.textContent = "Erro ao conectar com o servidor.";                msgErro.classList.remove('hidden');            }        });    </script>    <script src="/js/security.js"></script>    <script src="/js/auth.js"></script>    <script src="/js/usuarios.js"></script>    <script src="/js/configuracoes.js"></script>    <script src="/js/app.js"></script></body></body></html>

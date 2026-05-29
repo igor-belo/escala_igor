@@ -25,9 +25,6 @@ app.use('/api/atendimentos', atendimentosRoutes);
 app.use('/api/escala', escalaRoutes);
 app.use('/api/observacoes', observacoesRoutes);
 
-// ==========================================
-// MIGRATIONS — Adiciona colunas novas se não existirem
-// ==========================================
 async function runMigrations() {
     const migrations = [
         `ALTER TABLE observacoes_dia ADD COLUMN IF NOT EXISTS crm TEXT`,
@@ -47,9 +44,6 @@ async function runMigrations() {
     console.log('[Migrations] Concluídas.');
 }
 
-// ==========================================
-// WEBHOOK — Envia mensagem para Google Chat
-// ==========================================
 function enviarWebhook(webhookUrl, mensagem) {
     return new Promise((resolve, reject) => {
         if (!webhookUrl) return resolve();
@@ -68,7 +62,7 @@ function enviarWebhook(webhookUrl, mensagem) {
             });
             req.on('error', (e) => {
                 console.error('[Webhook] Erro:', e.message);
-                resolve(); // resolvemos mesmo com erro para não travar o loop
+                resolve();
             });
             req.write(payload);
             req.end();
@@ -100,18 +94,12 @@ function formatarMensagemChat(obs, nomeAnalistaDestinatario, emailAnalista, menc
     return msg;
 }
 
-// ==========================================
-// SCHEDULER — Verifica a cada 60s se há avisos para notificar
-// ==========================================
 async function verificarNotificacoesPendentes() {
     try {
-        // Janela: notificar observações cujo data+hora esteja entre agora+14min e agora+16min
         const agora = new Date();
         const limite_min = new Date(agora.getTime() + 14 * 60 * 1000);
         const limite_max = new Date(agora.getTime() + 16 * 60 * 1000);
 
-        // Usa o horário local do Brasil para determinar a data de hoje
-        // e compara a janela de 14-16 minutos diretamente no banco
         const resultado = await pool.query(`
             SELECT o.id,
                    TO_CHAR(o.data, 'YYYY-MM-DD') AS data,
@@ -146,18 +134,15 @@ async function verificarNotificacoesPendentes() {
             console.log(`[Scheduler] Notificando observação ID ${obs.id} — ${obs.assunto || obs.observacao}`);
             const mensagem = formatarMensagemChat(obs, obs.nome_analista, obs.email_analista, mencoesExtras);
 
-            // Envia para o webhook configurado no setor
             if (obs.webhook_setor) {
                 await enviarWebhook(obs.webhook_setor, mensagem);
             }
 
-            // Marca como notificado
             await pool.query('UPDATE observacoes_dia SET notificado = TRUE WHERE id = $1', [obs.id]);
         }
     } catch (e) { console.error('[Scheduler] Erro:', e.message); }
 }
 
-// Endpoint para ser chamado pelo Vercel Cron Job
 app.get('/api/cron/notificacoes', async (req, res) => {
     try {
         await verificarNotificacoesPendentes();
@@ -172,7 +157,8 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, async () => {
     console.log(`SERVIDOR RODANDO NA PORTA ${PORT}`);
     await runMigrations();
-    // Inicia o scheduler a cada 60 segundos
     setInterval(verificarNotificacoesPendentes, 60 * 1000);
-    console.log('[Scheduler] Iniciado — verifica notificações a cada 60s.');
+    console.log('[Scheduler] Iniciado.');
 });
+
+module.exports = app;
