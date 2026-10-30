@@ -4,7 +4,7 @@
   "crons": [
     {
       "path": "/api/cron/notificacoes",
-      "schedule": "* * * * *"
+      "schedule": "0 8 * * *"
     }
   ],
   "builds": [
