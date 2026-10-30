@@ -3,26 +3,34 @@ require('dotenv').config({ override: true });
 
 const config = {};
 
-// Priorizar Supabase para produção (Vercel)
-if (process.env.SUPABASE_CONNECTION_STRING) {
-    // Usar Transaction Mode para Vercel (serverless)
-    const connectionString = process.env.SUPABASE_CONNECTION_STRING.replace(':6543/', ':5432/');
-    config.connectionString = connectionString;
+// Priorizar variáveis de conexão (qualquer uma que existir)
+const connectionString = 
+    process.env.SUPABASE_CONNECTION_STRING || 
+    process.env.POSTGRES_URL || 
+    process.env.POSTGRES_URL_NON_POOLING ||
+    process.env.DATABASE_URL;
+
+if (connectionString) {
+    // Garantir que usa porta 5432 (Transaction Mode) para serverless
+    const adjustedConnectionString = connectionString.replace(':6543/', ':5432/');
+    config.connectionString = adjustedConnectionString;
     config.ssl = { rejectUnauthorized: false };
     
-    // Configurações para serverless
+    // Configurações otimizadas para serverless (Vercel)
     config.max = 1; // Mínimo de conexões para serverless
     config.idleTimeoutMillis = 0;
     config.connectionTimeoutMillis = 10000;
+    
+    console.log('[DB] Usando connection string (Supabase/Vercel)');
 } else if (process.env.PGHOST && process.env.PGUSER) {
-    // Configuração local
+    // Configuração local tradicional
     config.user = process.env.PGUSER;
     config.password = process.env.PGPASSWORD;
     config.host = process.env.PGHOST;
     config.port = parseInt(process.env.PGPORT, 10) || 5433;
     config.database = process.env.PGDATABASE;
-} else if (process.env.POSTGRES_URL || process.env.DATABASE_URL) {
-    config.connectionString = process.env.POSTGRES_URL || process.env.DATABASE_URL;
+    
+    console.log('[DB] Usando configuração local');
 }
 
 if (process.env.NODE_ENV === 'production' && config.host !== 'localhost' && config.host !== '127.0.0.1') {
