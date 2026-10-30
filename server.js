@@ -504,23 +504,38 @@ function isHojeData(data_proximo_contato) {
 
 const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, async () => {
-    console.log(`SERVIDOR RODANDO NA PORTA ${PORT}`);
-    await runMigrations();
-    setInterval(verificarNotificacoesPendentes, 60 * 1000);
-    console.log('[Scheduler] Iniciado.');
+// Inicializar em modo serverless (Vercel) ou normal (local)
+if (process.env.VERCEL || process.env.NODE_ENV === 'production' && !process.env.PGHOST) {
+    // Modo serverless do Vercel - não usar app.listen()
+    console.log('[Vercel] Modo serverless ativo');
     
-    // Inicia a limpeza automática de escalas antigas (diariamente à meia-noite)
-    iniciarLimpezaAutomatica();
+    // Executar migrations uma vez no cold start
+    runMigrations().catch(err => console.error('[Migrations] Erro:', err));
     
-    // Configurar o cron job para rodar todo dia de manhã (08:00)
-    const cron = require('node-cron');
-    const { runBimerScraper } = require('./src/services/bimerScraper');
-    cron.schedule('0 8 * * *', async () => {
-        console.log('[Cron] Executando scraper diário do Bimer CRM (08:00)...');
-        await runBimerScraper();
-        // Disparo retirado do automático. Deve ser disparado via UI.
+    // Iniciar limpeza automática (se estiver no Vercel, usar cron jobs externos)
+    if (!process.env.VERCEL) {
+        iniciarLimpezaAutomatica();
+    }
+} else {
+    // Modo local - usar app.listen()
+    app.listen(PORT, async () => {
+        console.log(`SERVIDOR RODANDO NA PORTA ${PORT}`);
+        await runMigrations();
+        setInterval(verificarNotificacoesPendentes, 60 * 1000);
+        console.log('[Scheduler] Iniciado.');
+        
+        // Inicia a limpeza automática de escalas antigas (diariamente à meia-noite)
+        iniciarLimpezaAutomatica();
+        
+        // Configurar o cron job para rodar todo dia de manhã (08:00)
+        const cron = require('node-cron');
+        const { runBimerScraper } = require('./src/services/bimerScraper');
+        cron.schedule('0 8 * * *', async () => {
+            console.log('[Cron] Executando scraper diário do Bimer CRM (08:00)...');
+            await runBimerScraper();
+            // Disparo retirado do automático. Deve ser disparado via UI.
+        });
     });
-});
+}
 
 module.exports = app;
