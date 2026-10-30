@@ -29,11 +29,11 @@ async function fazerLogin(e) {
   btn.innerHTML = txtOriginal;
   btn.disabled = false;
 }
-async function fazerLogout() {
+window.fazerLogout = async function() {
   try {
     await fetch('/api/logout', { method: 'POST', credentials: 'include' });
   } catch (e) {}
   localStorage.removeItem("usuarioLogado");
   localStorage.removeItem("token"); // Apenas para limpar quem já tinha
-  window.location.href = "/login";
+  window.location.href = "/login.html";
 }
