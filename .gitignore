@@ -142,3 +142,35 @@ dist
 .svelte-kit
 
 # End of https://www.toptal.com/developers/gitignore/api/node
+
+# Arquivos sensíveis - NUNCA COMMITAR
+*.exe
+*.bat
+*.xml
+backup-data.json
+import-data.sql
+03-import-data.sql
+migrate-to-supabase.js
+export-data-local.js
+import-to-supabase.js
+generate-insert-sql.js
+generate-insert-sql-v2.js
+
+# Arquivos de serviço Windows
+escala-server.exe
+escala-service.exe
+escala-service.xml
+instalar-servico-windows.js
+remover-servico-windows.js
+*.old
+
+# SQL sensíveis
+01-*.sql
+02-*.sql
+03-*.sql
+*-import*.sql
+*-export*.sql
+
+# README de migração (contém informações sensíveis)
+README-MIGRACAO.md
+get-supabase-credentials.md

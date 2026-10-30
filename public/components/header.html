@@ -1,1 +1,71 @@
-<nav class="max-w-7xl mx-auto mb-4 bg-white dark:bg-gray-800 p-4 rounded-lg shadow flex flex-col md:flex-row justify-between items-center gap-4">    <div class="flex gap-4">        <a href="/index.html" id="aba-escalas" class="px-4 py-2 rounded font-bold transition text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">            <i class="fa-regular fa-calendar-days mr-2"></i>Escalas        </a>        <a href="/atendimentos.html" id="aba-atendimentos" class="px-4 py-2 rounded font-bold transition text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">            <i class="fa-solid fa-stopwatch mr-2"></i>Atendimentos        </a>    </div>    <div class="flex gap-2 items-center">        <span id="saudacao" class="text-gray-600 dark:text-gray-400 font-medium mr-4"></span>        <button onclick="document.getElementById('modalConfiguracoes').classList.remove('hidden')" id="btnGerenciar" class="hidden bg-gray-600 text-white px-3 py-2 rounded shadow hover:bg-gray-700 transition text-sm">            <i class="fa-solid fa-gears mr-2"></i>Configurações        </button>        <button id="btnDarkMode" class="p-2 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200">            <i class="fa-solid fa-circle-half-stroke"></i>        </button>        <button onclick="fazerLogout()" class="bg-red-600 text-white px-3 py-2 rounded shadow hover:bg-red-700 transition text-sm">            <i class="fa-solid fa-right-from-bracket mr-2"></i>Sair        </button>    </div></nav>
+<aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 bg-white dark:bg-zinc-900 border-r border-zinc-900/5 dark:border-white/10 flex flex-col transition-transform duration-200 -translate-x-full lg:translate-x-0">
+    <div id="sidebar-header" class="flex items-center justify-between px-6 py-5 border-b border-zinc-900/5 dark:border-white/10">
+        <div class="flex items-center gap-3 cursor-pointer" onclick="toggleSidebar()" title="Recolher/Expandir Menu">
+            <img src="/shop_icone.webp" alt="Logo" class="w-10 h-10 object-contain shrink-0">
+            <span class="sidebar-text text-base font-semibold text-zinc-900 dark:text-white tracking-tight">Escalas</span>
+        </div>
+        <button id="btnToggleSidebarArrow" onclick="toggleSidebar()" class="hidden lg:flex text-zinc-400 hover:text-emerald-500 dark:hover:text-emerald-400 transition-colors" title="Recolher Menu">
+            <i class="fa-solid fa-chevron-left text-sm"></i>
+        </button>
+    </div>
+
+    <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto overflow-x-hidden">
+        <p class="sidebar-title px-3 mb-2 text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Navegação</p>
+        <a href="/" id="aba-escalas" class="sidebar-link group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-900/[0.025] dark:hover:bg-white/5 hover:text-zinc-900 dark:hover:text-white transition-all relative" title="Escalas">
+            <span class="sidebar-indicator hidden absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-full bg-emerald-500"></span>
+            <i class="fa-regular fa-calendar-days w-5 text-center text-zinc-400 dark:text-zinc-500 group-hover:text-emerald-500 dark:group-hover:text-emerald-400 transition-colors"></i>
+            <span class="sidebar-text">Escalas</span>
+        </a>
+        <a href="/atendimentos" id="aba-atendimentos" class="sidebar-link group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-900/[0.025] dark:hover:bg-white/5 hover:text-zinc-900 dark:hover:text-white transition-all relative" title="Atendimentos">
+            <span class="sidebar-indicator hidden absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-full bg-emerald-500"></span>
+            <i class="fa-solid fa-headset w-5 text-center text-zinc-400 dark:text-zinc-500 group-hover:text-emerald-500 dark:group-hover:text-emerald-400 transition-colors"></i>
+            <span class="sidebar-text">Atendimentos</span>
+        </a>
+        <a href="/alinhamentos" id="aba-alinhamentos" class="sidebar-link hidden group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-900/[0.025] dark:hover:bg-white/5 hover:text-zinc-900 dark:hover:text-white transition-all relative" title="Alinhamentos">
+            <span class="sidebar-indicator hidden absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-full bg-emerald-500"></span>
+            <i class="fa-solid fa-list-check w-5 text-center text-zinc-400 dark:text-zinc-500 group-hover:text-emerald-500 dark:group-hover:text-emerald-400 transition-colors"></i>
+            <span class="sidebar-text">Alinhamentos</span>
+        </a>
+        <a href="/bimer" id="aba-bimer" class="sidebar-link hidden group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-900/[0.025] dark:hover:bg-white/5 hover:text-zinc-900 dark:hover:text-white transition-all relative" title="Lançar Horas">
+            <span class="sidebar-indicator hidden absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-full bg-emerald-500"></span>
+            <i class="fa-solid fa-rocket w-5 text-center text-zinc-400 dark:text-zinc-500 group-hover:text-emerald-500 dark:group-hover:text-emerald-400 transition-colors"></i>
+            <span class="sidebar-text">Lançar Horas</span>
+        </a>
+        <a href="/bimer-crm" id="aba-crm" class="sidebar-link hidden group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-900/[0.025] dark:hover:bg-white/5 hover:text-zinc-900 dark:hover:text-white transition-all relative" title="Gestão CRM">
+            <span class="sidebar-indicator hidden absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-full bg-emerald-500"></span>
+            <i class="fa-solid fa-chart-line w-5 text-center text-zinc-400 dark:text-zinc-500 group-hover:text-emerald-500 dark:group-hover:text-emerald-400 transition-colors"></i>
+            <span class="sidebar-text">Gestão CRM</span>
+        </a>
+
+        <div class="pt-4">
+            <p class="sidebar-title px-3 mb-2 text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Sistema</p>
+            <a href="/configuracoes" id="aba-configuracoes" class="sidebar-link hidden group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-900/[0.025] dark:hover:bg-white/5 hover:text-zinc-900 dark:hover:text-white transition-all relative" title="Configurações">
+                <span class="sidebar-indicator hidden absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-full bg-emerald-500"></span>
+                <i class="fa-solid fa-gear w-5 text-center text-zinc-400 dark:text-zinc-500 group-hover:text-emerald-500 dark:group-hover:text-emerald-400 transition-colors"></i>
+                <span class="sidebar-text">Configurações</span>
+            </a>
+            <button id="btnDarkMode" class="w-full group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-900/[0.025] dark:hover:bg-white/5 hover:text-zinc-900 dark:hover:text-white transition-all" title="Alternar Tema">
+                <i class="fa-solid fa-circle-half-stroke w-5 text-center text-zinc-400 dark:text-zinc-500 group-hover:text-emerald-500 dark:group-hover:text-emerald-400 transition-colors"></i>
+                <span class="sidebar-text">Alternar Tema</span>
+            </button>
+        </div>
+    </nav>
+
+    <div id="sidebar-footer" class="border-t border-zinc-900/5 dark:border-white/10 px-4 py-4">
+        <div id="sidebar-user" class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-full bg-zinc-100 dark:bg-zinc-800 ring-1 ring-zinc-900/5 dark:ring-white/10 flex items-center justify-center flex-shrink-0">
+                <i class="fa-solid fa-user text-zinc-400 dark:text-zinc-500 text-sm"></i>
+            </div>
+            <div id="avatar-info" class="flex-1 min-w-0">
+                <p id="saudacao" class="text-sm font-medium text-zinc-900 dark:text-white truncate"></p>
+            </div>
+            <button onclick="fazerLogout()" class="sidebar-text p-1.5 rounded-lg text-zinc-400 hover:text-red-500 hover:bg-zinc-900/[0.025] dark:hover:bg-white/5 transition-all" title="Sair">
+                <i class="fa-solid fa-right-from-bracket text-sm"></i>
+            </button>
+        </div>
+    </div>
+</aside>
+
+<button id="btnMobileMenu" onclick="document.getElementById('sidebar').classList.toggle('-translate-x-full')" class="lg:hidden fixed top-4 left-4 z-50 p-2.5 rounded-xl bg-white dark:bg-zinc-900 ring-1 ring-zinc-900/10 dark:ring-white/10 shadow-sm text-zinc-500 dark:text-zinc-400 hover:text-emerald-500 dark:hover:text-emerald-400 transition-colors">
+    <i class="fa-solid fa-bars"></i>
+</button>

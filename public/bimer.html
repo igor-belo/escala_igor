@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lançar Horas - Escalas</title>
+    <link rel="icon" href="/shop_icone.webp" type="image/webp">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        zinc: { 50: '#fafafa', 100: '#f4f4f5', 200: '#e4e4e7', 300: '#d4d4d8', 400: '#a1a1aa', 500: '#71717a', 600: '#52525b', 700: '#3f3f46', 800: '#27272a', 900: '#18181b', 950: '#09090b' },
+                        emerald: { 50: '#ecfdf5', 100: '#d1fae5', 200: '#a7f3d0', 300: '#6ee7b7', 400: '#34d399', 500: '#10b981', 600: '#059669', 700: '#047857', 800: '#065f46', 900: '#064e3b' }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        * { font-feature-settings: "cv02", "cv03", "cv04", "cv11"; }
+    </style>
+    <script>
+        if (localStorage.getItem('tema') === 'dark' || localStorage.getItem('theme') === 'dark' || (!('tema' in localStorage) && !('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+</head>
+<body class="font-sans bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 antialiased">
+    <div id="header-container"></div>
+
+    <div id="main-wrapper" class="lg:pl-64 transition-all duration-300 flex flex-col min-h-screen">
+        <main class="max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 mt-12 lg:mt-0">
+            <div class="mb-8">
+                <h1 class="text-2xl font-semibold text-zinc-900 dark:text-white tracking-tight flex items-center gap-3">
+                    Lançar Horas Bimer
+                </h1>
+                <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">Gere e lance agendamentos na API Alterdata Bimer com base na escala dos analistas.</p>
+            </div>
+
+            <div class="bg-white dark:bg-zinc-800/50 rounded-2xl ring-1 ring-zinc-900/5 dark:ring-white/10 p-5 mb-6 shadow-sm shadow-zinc-900/5 dark:shadow-none">
+                <p class="text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-4">1. Filtrar período e tipos</p>
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
+                    <div>
+                        <label class="block text-[11px] font-medium text-zinc-500 dark:text-zinc-400 mb-1.5 uppercase tracking-widest">Setor</label>
+                        <select id="bimer-setor" onchange="carregarAnalistasBimer()" class="w-full rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white px-3 py-2.5 text-sm ring-1 ring-zinc-900/10 dark:ring-white/10 focus:ring-2 focus:ring-emerald-500 outline-none transition shadow-sm shadow-zinc-900/5 dark:shadow-none"></select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-medium text-zinc-500 dark:text-zinc-400 mb-1.5 uppercase tracking-widest">Analista</label>
+                        <select id="bimer-analista" class="w-full rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white px-3 py-2.5 text-sm ring-1 ring-zinc-900/10 dark:ring-white/10 focus:ring-2 focus:ring-emerald-500 outline-none transition shadow-sm shadow-zinc-900/5 dark:shadow-none">
+                            <option value="">Todos</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-medium text-zinc-500 dark:text-zinc-400 mb-1.5 uppercase tracking-widest">Data Inicial</label>
+                        <input type="date" id="bimer-data-inicio" class="w-full rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white px-3 py-2.5 text-sm ring-1 ring-zinc-900/10 dark:ring-white/10 focus:ring-2 focus:ring-emerald-500 outline-none transition shadow-sm shadow-zinc-900/5 dark:shadow-none">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-medium text-zinc-500 dark:text-zinc-400 mb-1.5 uppercase tracking-widest">Data Final</label>
+                        <input type="date" id="bimer-data-fim" class="w-full rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white px-3 py-2.5 text-sm ring-1 ring-zinc-900/10 dark:ring-white/10 focus:ring-2 focus:ring-emerald-500 outline-none transition shadow-sm shadow-zinc-900/5 dark:shadow-none">
+                    </div>
+                    <div class="flex items-end">
+                        <button onclick="processarPreviewBimer()" id="btnProcessarBimer" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2.5 rounded-lg shadow-sm font-semibold text-sm transition-colors">
+                            <i class="fa-solid fa-bolt mr-1.5 text-xs"></i>Processar
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mb-2">
+                    <label class="block text-[11px] font-medium text-zinc-500 dark:text-zinc-400 mb-2 uppercase tracking-widest">Tipos da Escala para Lançar</label>
+                    <div id="bimer-tipos-container" class="flex flex-wrap gap-2">
+                        <label class="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-50 dark:bg-zinc-800 ring-1 ring-zinc-900/5 dark:ring-white/10 cursor-pointer hover:ring-emerald-500/30 transition-all text-sm">
+                            <input type="checkbox" value="Filtro" class="bimer-tipo-cb w-4 h-4 text-emerald-600 rounded" checked> Filtro
+                        </label>
+                        <label class="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-50 dark:bg-zinc-800 ring-1 ring-zinc-900/5 dark:ring-white/10 cursor-pointer hover:ring-emerald-500/30 transition-all text-sm">
+                            <input type="checkbox" value="Treinamento" class="bimer-tipo-cb w-4 h-4 text-emerald-600 rounded"> Treinamento
+                        </label>
+                        <label class="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-50 dark:bg-zinc-800 ring-1 ring-zinc-900/5 dark:ring-white/10 cursor-pointer hover:ring-emerald-500/30 transition-all text-sm">
+                            <input type="checkbox" value="Chat" class="bimer-tipo-cb w-4 h-4 text-emerald-600 rounded"> Chat
+                        </label>
+                        <label class="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-50 dark:bg-zinc-800 ring-1 ring-zinc-900/5 dark:ring-white/10 cursor-pointer hover:ring-emerald-500/30 transition-all text-sm">
+                            <input type="checkbox" value="Rev Almoço" class="bimer-tipo-cb w-4 h-4 text-emerald-600 rounded"> Rev Almoço
+                        </label>
+                        <label class="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-50 dark:bg-zinc-800 ring-1 ring-zinc-900/5 dark:ring-white/10 cursor-pointer hover:ring-emerald-500/30 transition-all text-sm">
+                            <input type="checkbox" value="Visita Externa" class="bimer-tipo-cb w-4 h-4 text-emerald-600 rounded"> Visita Externa
+                        </label>
+                        <label class="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-50 dark:bg-zinc-800 ring-1 ring-zinc-900/5 dark:ring-white/10 cursor-pointer hover:ring-emerald-500/30 transition-all text-sm">
+                            <input type="checkbox" value="Férias" class="bimer-tipo-cb w-4 h-4 text-emerald-600 rounded"> Férias
+                        </label>
+                        <label class="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-50 dark:bg-zinc-800 ring-1 ring-zinc-900/5 dark:ring-white/10 cursor-pointer hover:ring-emerald-500/30 transition-all text-sm">
+                            <input type="checkbox" value="Licença" class="bimer-tipo-cb w-4 h-4 text-emerald-600 rounded"> Licença
+                        </label>
+                        <label class="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-50 dark:bg-zinc-800 ring-1 ring-zinc-900/5 dark:ring-white/10 cursor-pointer hover:ring-emerald-500/30 transition-all text-sm">
+                            <input type="checkbox" value="Falta" class="bimer-tipo-cb w-4 h-4 text-emerald-600 rounded"> Falta
+                        </label>
+                        <label class="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-50 dark:bg-zinc-800 ring-1 ring-zinc-900/5 dark:ring-white/10 cursor-pointer hover:ring-emerald-500/30 transition-all text-sm">
+                            <input type="checkbox" value="Folga" class="bimer-tipo-cb w-4 h-4 text-emerald-600 rounded"> Folga
+                        </label>
+                    </div>
+                </div>
+
+                <div id="bimer-descricoes-area" class="hidden mt-4">
+                    <label class="block text-[11px] font-medium text-zinc-500 dark:text-zinc-400 mb-2 uppercase tracking-widest">Descrições por Tipo (Observação do Lançamento)</label>
+                    <div id="bimer-descricoes-container" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+                </div>
+            </div>
+
+            <div id="bimer-alertas" class="hidden mb-4"></div>
+
+            <div id="bimer-preview-area" class="hidden">
+                <div class="bg-white dark:bg-zinc-800/50 rounded-2xl ring-1 ring-zinc-900/5 dark:ring-white/10 shadow-sm shadow-zinc-900/5 dark:shadow-none overflow-hidden">
+                    <div class="p-5 border-b border-zinc-100 dark:border-zinc-800 flex justify-between items-center">
+                        <div>
+                            <p class="text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">2. Preview dos Lançamentos</p>
+                            <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1">Verifique os dados antes de enviar. Remova turnos indesejados clicando no <i class="fa-solid fa-trash-can text-red-400"></i>.</p>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span id="bimer-contador" class="bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 ring-1 ring-emerald-200/50 dark:ring-emerald-500/20 rounded-full px-4 py-1.5 text-sm font-bold tabular-nums">0 turnos</span>
+                        </div>
+                    </div>
+                    <div class="max-h-[50vh] overflow-y-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-zinc-50 dark:bg-zinc-900 sticky top-0">
+                                <tr class="border-b border-zinc-100 dark:border-zinc-800">
+                                    <th class="px-5 py-3 text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Analista</th>
+                                    <th class="px-5 py-3 text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Data</th>
+                                    <th class="px-5 py-3 text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Função</th>
+                                    <th class="px-5 py-3 text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Período</th>
+                                    <th class="px-5 py-3 text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest w-10"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="bimer-preview-body" class="text-sm text-zinc-700 dark:text-zinc-300"></tbody>
+                        </table>
+                    </div>
+                    <div class="p-5 border-t border-zinc-100 dark:border-zinc-800 flex justify-end gap-3">
+                        <button onclick="limparPreviewBimer()" class="text-zinc-700 dark:text-zinc-300 ring-1 ring-inset ring-zinc-900/10 dark:ring-white/10 hover:bg-zinc-50 dark:hover:bg-zinc-800 bg-white dark:bg-zinc-800/50 px-5 py-2.5 rounded-lg shadow-sm font-medium text-sm transition-colors">
+                            <i class="fa-solid fa-eraser mr-1.5 text-xs"></i>Limpar
+                        </button>
+                        <button onclick="lancarBimer()" id="btnLancarBimer" class="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-2.5 rounded-lg shadow-sm font-semibold text-sm transition-colors">
+                            <i class="fa-solid fa-paper-plane mr-1.5 text-xs"></i>Lançar na API Bimer
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="bimer-resultados" class="hidden mt-6">
+                <div class="bg-white dark:bg-zinc-800/50 rounded-2xl ring-1 ring-zinc-900/5 dark:ring-white/10 p-5 shadow-sm shadow-zinc-900/5 dark:shadow-none">
+                    <p class="text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-3">3. Resultados do Lançamento</p>
+                    <div id="bimer-resultados-body"></div>
+                </div>
+            </div>
+        </main>
+
+        <div class="max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 mt-auto">
+            <div id="footer-container"></div>
+        </div>
+    </div>
+
+    <div id="modais-container"></div>
+    <script src="/js/security.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/usuarios.js"></script>
+    <script src="/js/configuracoes.js"></script>
+    <script src="/js/app.js?v=3"></script>
+</body>
+</html>

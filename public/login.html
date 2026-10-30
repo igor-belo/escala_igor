@@ -1,1 +1,214 @@
-<!DOCTYPE html><html lang="pt-BR" class="light"><head>    <meta charset="UTF-8">    <meta name="viewport" content="width=device-width, initial-scale=1.0">    <title>Login - Sistema de Escala</title>    <script src="https://cdn.tailwindcss.com"></script>    <script>        tailwind.config = { darkMode: 'class' }    </script><script>    if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {        document.documentElement.classList.add('dark');    } else {        document.documentElement.classList.remove('dark');    }</script></head><body class="bg-gray-100 dark:bg-gray-900 flex items-center justify-center min-h-screen  relative">    <button id="btnDarkMode" class="absolute top-4 right-4 p-2 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 transition">        🌓 Tema    </button>    <div class="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md w-full max-w-sm ">        <div id="container-login">            <h2 class="text-2xl font-bold text-gray-800 dark:text-white text-center mb-6">Acesso ao Sistema</h2>            <form id="formLogin" class="space-y-4">                <div>                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">E-mail ou Login</label>                    <input type="text" id="identificador" required class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm p-2 border focus:border-blue-500 focus:ring-blue-500">                </div>                <div>                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Senha</label>                    <input type="password" id="senha" required class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm p-2 border focus:border-blue-500 focus:ring-blue-500">                </div>                <button type="submit" class="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded hover:bg-blue-700 transition">                    Entrar                </button>            </form>            <div id="msg-erro-login" class="mt-4 text-center text-red-600 dark:text-red-400 font-medium hidden"></div>        </div>        <div id="container-troca-senha" class="hidden">            <h2 class="text-xl font-bold text-gray-800 dark:text-white text-center mb-2">Primeiro Acesso</h2>            <p class="text-sm text-gray-600 dark:text-gray-400 text-center mb-6">Por favor, crie uma nova senha de acesso.</p>            <form id="formTrocaSenha" class="space-y-4">                <div>                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nova Senha</label>                    <input type="password" id="novaSenha" required minlength="6" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm p-2 border focus:border-blue-500 focus:ring-blue-500">                </div>                <div>                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Confirmar Nova Senha</label>                    <input type="password" id="confirmaSenha" required minlength="6" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm p-2 border focus:border-blue-500 focus:ring-blue-500">                </div>                <button type="submit" class="w-full bg-green-600 text-white font-bold py-2 px-4 rounded hover:bg-green-700 transition">                    Salvar Senha e Entrar                </button>            </form>            <div id="msg-erro-senha" class="mt-4 text-center text-red-600 dark:text-red-400 font-medium hidden"></div>        </div>    </div>    <script>        const html = document.documentElement;        const btnDarkMode = document.getElementById('btnDarkMode');        if(localStorage.getItem('tema') === 'dark') {            html.classList.add('dark');        }        btnDarkMode.addEventListener('click', () => {            html.classList.toggle('dark');            if(html.classList.contains('dark')) {                localStorage.setItem('tema', 'dark');            } else {                localStorage.setItem('tema', 'light');            }        });        let usuarioTemporario = null;        document.getElementById('formLogin').addEventListener('submit', async function(e) {            e.preventDefault();            const identificador = document.getElementById('identificador').value;            const senha = document.getElementById('senha').value;            const msgErro = document.getElementById('msg-erro-login');            try {                const resposta = await fetch('/api/login', {                    method: 'POST',                    headers: { 'Content-Type': 'application/json' },                    body: JSON.stringify({ identificador, senha })                });                const dados = await resposta.json();                if (resposta.ok) {                    usuarioTemporario = dados.usuario;                    if (usuarioTemporario.primeiro_acesso) {                        document.getElementById('container-login').classList.add('hidden');                        document.getElementById('container-troca-senha').classList.remove('hidden');                    } else {                        localStorage.setItem('usuarioLogado', JSON.stringify(usuarioTemporario));                        window.location.href = 'index.html';                     }                } else {                    msgErro.textContent = dados.erro;                    msgErro.classList.remove('hidden');                }            } catch (erro) {                msgErro.textContent = "Erro ao conectar com o servidor.";                msgErro.classList.remove('hidden');            }        });        document.getElementById('formTrocaSenha').addEventListener('submit', async function(e) {            e.preventDefault();            const novaSenha = document.getElementById('novaSenha').value;            const confirmaSenha = document.getElementById('confirmaSenha').value;            const msgErro = document.getElementById('msg-erro-senha');            if (novaSenha !== confirmaSenha) {                msgErro.textContent = "As senhas não conferem!";                msgErro.classList.remove('hidden');                return;            }            try {                const resposta = await fetch('/api/alterar-senha', {                    method: 'POST',                    headers: { 'Content-Type': 'application/json' },                    body: JSON.stringify({ id: usuarioTemporario.id, novaSenha: novaSenha })                });                if (resposta.ok) {                    usuarioTemporario.primeiro_acesso = false;                    localStorage.setItem('usuarioLogado', JSON.stringify(usuarioTemporario));                    alert("Senha alterada com sucesso! Bem-vindo.");                    window.location.href = 'index.html';                } else {                    msgErro.textContent = "Erro ao alterar a senha.";                    msgErro.classList.remove('hidden');                }            } catch (erro) {                msgErro.textContent = "Erro ao conectar com o servidor.";                msgErro.classList.remove('hidden');            }        });    </script>    <script src="/js/security.js"></script>    <script src="/js/auth.js"></script>    <script src="/js/usuarios.js"></script>    <script src="/js/configuracoes.js"></script>    <script src="/js/app.js"></script></body></body></html>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Escalas</title>
+    <link rel="icon" href="/shop_icone.webp" type="image/webp">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        zinc: { 50: '#fafafa', 100: '#f4f4f5', 200: '#e4e4e7', 300: '#d4d4d8', 400: '#a1a1aa', 500: '#71717a', 600: '#52525b', 700: '#3f3f46', 800: '#27272a', 900: '#18181b', 950: '#09090b' },
+                        emerald: { 50: '#ecfdf5', 100: '#d1fae5', 200: '#a7f3d0', 300: '#6ee7b7', 400: '#34d399', 500: '#10b981', 600: '#059669', 700: '#047857', 800: '#065f46', 900: '#064e3b' }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        * { font-feature-settings: "cv02", "cv03", "cv04", "cv11"; }
+    </style>
+    <script>
+        if (localStorage.getItem('tema') === 'dark' || localStorage.getItem('theme') === 'dark' || (!('tema' in localStorage) && !('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+</head>
+<body class="font-sans bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 antialiased flex items-center justify-center min-h-screen relative transition-colors duration-200">
+    
+    <button id="btnDarkMode" class="absolute top-5 right-5 p-2.5 rounded-full ring-1 ring-zinc-900/10 dark:ring-white/10 bg-white dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-emerald-500 dark:hover:text-emerald-400 transition-colors shadow-sm">
+        <i class="fa-solid fa-circle-half-stroke text-sm"></i>
+    </button>
+
+    <div class="w-full max-w-[400px] mx-4">
+        <div class="bg-white dark:bg-zinc-800/50 rounded-2xl ring-1 ring-zinc-900/5 dark:ring-white/10 shadow-lg shadow-zinc-900/5 dark:shadow-none p-8 sm:p-10 transition-colors duration-200">
+            <div class="text-center mb-8 flex flex-col items-center justify-center">
+                <img src="/shop_icone.webp" alt="Logo" class="h-20 object-contain">
+            </div>
+
+            <div id="container-login">
+                <form id="formLogin" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1.5">Usuário / E-mail</label>
+                        <input type="text" id="identificador" required 
+                               class="block w-full rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white px-3 py-2.5 text-sm ring-1 ring-inset ring-zinc-900/10 dark:ring-white/10 focus:ring-2 focus:ring-inset focus:ring-emerald-500 outline-none transition-all placeholder:text-zinc-400 dark:placeholder:text-zinc-500 shadow-sm shadow-zinc-900/5 dark:shadow-none" 
+                               placeholder="Usuário/E-mail">
+                    </div>
+                    <div class="relative">
+                        <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1.5">Senha</label>
+                        <input type="password" id="senha" required 
+                               class="block w-full rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white px-3 py-2.5 pr-10 text-sm ring-1 ring-inset ring-zinc-900/10 dark:ring-white/10 focus:ring-2 focus:ring-inset focus:ring-emerald-500 outline-none transition-all placeholder:text-zinc-400 dark:placeholder:text-zinc-500 shadow-sm shadow-zinc-900/5 dark:shadow-none" 
+                               placeholder="Senha">
+                        <button type="button" onclick="toggleSenha('senha', 'eyeIconLogin')" class="absolute bottom-0 inset-y-auto right-0 pr-3 h-[42px] flex items-center text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition">
+                            <i id="eyeIconLogin" class="fa-solid fa-eye text-sm"></i>
+                        </button>
+                    </div>
+                    
+                    <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-2.5 px-4 rounded-lg transition-colors shadow-sm text-sm mt-2">
+                        Entrar
+                    </button>
+                </form>
+
+
+
+                <div class="text-center mt-6">
+                    <a href="#" class="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 text-sm font-medium transition-colors">Esqueceu a senha?</a>
+                </div>
+
+                <div id="msg-erro-login" class="mt-4 text-center text-red-500 dark:text-red-400 text-xs font-medium hidden"></div>
+            </div>
+
+            <div id="container-troca-senha" class="hidden">
+                <p class="text-sm text-zinc-500 dark:text-zinc-400 text-center mb-6">Primeiro acesso: Crie sua nova senha</p>
+                <form id="formTrocaSenha" class="space-y-4">
+                    <div class="relative">
+                        <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1.5">Nova Senha</label>
+                        <input type="password" id="novaSenha" required minlength="6" 
+                               class="block w-full rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white px-3 py-2.5 pr-10 text-sm ring-1 ring-inset ring-zinc-900/10 dark:ring-white/10 focus:ring-2 focus:ring-inset focus:ring-emerald-500 outline-none transition-all placeholder:text-zinc-400 dark:placeholder:text-zinc-500 shadow-sm shadow-zinc-900/5 dark:shadow-none" 
+                               placeholder="Nova Senha">
+                        <button type="button" onclick="toggleSenha('novaSenha', 'eyeIconNova')" class="absolute bottom-0 inset-y-auto right-0 pr-3 h-[42px] flex items-center text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition">
+                            <i id="eyeIconNova" class="fa-solid fa-eye text-sm"></i>
+                        </button>
+                    </div>
+                    <div class="relative">
+                        <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1.5">Confirmar Senha</label>
+                        <input type="password" id="confirmaSenha" required minlength="6" 
+                               class="block w-full rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white px-3 py-2.5 pr-10 text-sm ring-1 ring-inset ring-zinc-900/10 dark:ring-white/10 focus:ring-2 focus:ring-inset focus:ring-emerald-500 outline-none transition-all placeholder:text-zinc-400 dark:placeholder:text-zinc-500 shadow-sm shadow-zinc-900/5 dark:shadow-none" 
+                               placeholder="Confirmar Senha">
+                        <button type="button" onclick="toggleSenha('confirmaSenha', 'eyeIconConfirma')" class="absolute bottom-0 inset-y-auto right-0 pr-3 h-[42px] flex items-center text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition">
+                            <i id="eyeIconConfirma" class="fa-solid fa-eye text-sm"></i>
+                        </button>
+                    </div>
+                    <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-2.5 px-4 rounded-lg transition-colors shadow-sm text-sm mt-2">
+                        Salvar e Entrar
+                    </button>
+                </form>
+                <div id="msg-erro-senha" class="mt-4 text-center text-red-500 dark:text-red-400 text-xs font-medium hidden"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const html = document.documentElement;
+        const btnDarkMode = document.getElementById('btnDarkMode');
+        
+        btnDarkMode.addEventListener('click', () => {
+            html.classList.toggle('dark');
+            if(html.classList.contains('dark')) {
+                localStorage.setItem('tema', 'dark');
+            } else {
+                localStorage.setItem('tema', 'light');
+            }
+        });
+
+        function toggleSenha(inputId, iconId) {
+            const input = document.getElementById(inputId);
+            const icon = document.getElementById(iconId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
+        let usuarioTemporario = null;
+        document.getElementById('formLogin').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const identificador = document.getElementById('identificador').value;
+            const senha = document.getElementById('senha').value;
+            const msgErro = document.getElementById('msg-erro-login');
+            try {
+                const resposta = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ identificador, senha })
+                });
+                const dados = await resposta.json();
+                if (resposta.ok) {
+                    usuarioTemporario = dados.usuario;
+                    if (usuarioTemporario.primeiro_acesso) {
+                        document.getElementById('container-login').classList.add('hidden');
+                        document.getElementById('container-troca-senha').classList.remove('hidden');
+                    } else {
+                        localStorage.setItem('usuarioLogado', JSON.stringify(usuarioTemporario));
+                        // Token is handled via HttpOnly cookie
+                        window.location.href = '/';
+                    }
+                } else {
+                    msgErro.textContent = dados.erro;
+                    msgErro.classList.remove('hidden');
+                }
+            } catch (erro) {
+                msgErro.textContent = "Erro ao conectar com o servidor.";
+                msgErro.classList.remove('hidden');
+            }
+        });
+
+        document.getElementById('formTrocaSenha').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const novaSenha = document.getElementById('novaSenha').value;
+            const confirmaSenha = document.getElementById('confirmaSenha').value;
+            const msgErro = document.getElementById('msg-erro-senha');
+            if (novaSenha !== confirmaSenha) {
+                msgErro.textContent = "As senhas não conferem!";
+                msgErro.classList.remove('hidden');
+                return;
+            }
+            try {
+                const resposta = await fetch('/api/alterar-senha', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: usuarioTemporario.id, novaSenha: novaSenha })
+                });
+                if (resposta.ok) {
+                    usuarioTemporario.primeiro_acesso = false;
+                    localStorage.setItem('usuarioLogado', JSON.stringify(usuarioTemporario));
+                    // Token is handled via HttpOnly cookie
+                    window.location.href = '/';
+                } else {
+                    msgErro.textContent = "Erro ao alterar a senha.";
+                    msgErro.classList.remove('hidden');
+                }
+            } catch (erro) {
+                msgErro.textContent = "Erro ao conectar com o servidor.";
+                msgErro.classList.remove('hidden');
+            }
+        });
+
+
+    </script>
+    <script src="/js/security.js?v=3"></script>
+    <script src="/js/auth.js?v=3"></script>
+    <script src="/js/usuarios.js?v=3"></script>
+    <script src="/js/configuracoes.js?v=3"></script>
+    <script src="/js/app.js?v=3"></script>
+</body>
+</html>

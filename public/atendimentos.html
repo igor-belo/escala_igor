@@ -1,1 +1,297 @@
-<!DOCTYPE html><html lang="pt-BR"><head>    <meta charset="UTF-8">    <meta name="viewport" content="width=device-width, initial-scale=1.0">    <title>Painel de Atendimentos</title>    <script src="https://cdn.tailwindcss.com"></script>    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">    <script>tailwind.config = { darkMode: 'class' }</script>    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>    <style>        @media print {            body * { visibility: hidden; }            #area-impressao, #area-impressao * { visibility: visible; }            #area-impressao { position: absolute; left: 0; top: 0; width: 100%; }            .no-print { display: none !important; }        }    </style><script>    if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {        document.documentElement.classList.add('dark');    } else {        document.documentElement.classList.remove('dark');    }</script></head><body class="bg-gray-100 dark:bg-gray-900 p-4 md:p-6 ">    <div id="header-container" class="no-print"></div>    <div class="max-w-7xl mx-auto bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md no-print">        <div class="flex justify-between items-center mb-6 border-b pb-4 dark:border-gray-700">            <h1 class="text-2xl font-bold dark:text-white">                <i class="fa-solid fa-network-wired mr-2"></i>Gestão de Atendimentos            </h1>            <div class="flex gap-4 items-center">                <div id="box-setor">                    <select id="filtro-setor" class="p-2 border rounded dark:bg-gray-700 dark:text-white dark:border-gray-600 focus:ring-blue-500"></select>                </div>                <button id="btnNovaPrioridade" onclick="abrirModalPrioridade()" class="hidden bg-purple-600 text-white px-4 py-2 rounded shadow hover:bg-purple-700 transition font-bold">                    <i class="fa-solid fa-star mr-2"></i>Nova Prioridade                </button>                <button id="btnNovoAtendimento" onclick="abrirModalNovoAtendimento()" class="bg-green-600 text-white px-4 py-2 rounded shadow hover:bg-green-700 transition font-bold">                    <i class="fa-solid fa-plus mr-2"></i>Novo Atendimento                </button>            </div>        </div>        <div id="abas-admin" class="hidden flex gap-4 border-b dark:border-gray-700 mb-6">            <button onclick="mudarAba('kanban')" id="tab-kanban" class="pb-2 font-bold border-b-2 border-blue-600 text-blue-600 dark:text-blue-400 px-2 transition">                <i class="fa-solid fa-chalkboard mr-2"></i>Painel Ativo            </button>            <button onclick="mudarAba('relatorios')" id="tab-relatorios" class="pb-2 font-bold border-b-2 border-transparent text-gray-500 hover:text-blue-600 px-2 transition">                <i class="fa-solid fa-chart-line mr-2"></i>Histórico e Relatórios            </button>            <button onclick="mudarAba('finalizados')" id="tab-finalizados-hoje" class="pb-2 font-bold border-b-2 border-transparent text-gray-500 hover:text-blue-600 px-2 transition">                <i class="fa-solid fa-circle-check mr-2"></i>Finalizados Hoje            </button>        </div>        <div id="area-kanban">            <div id="container-fila" class="mb-8 hidden">                <h2 class="text-lg font-bold text-gray-700 dark:text-gray-300 mb-4 border-b dark:border-gray-700 pb-2">                    <i class="fa-solid fa-list-check mr-2"></i>Fila de Prioridades (Aguardando Analista)                </h2>                <div id="fila-cards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">                    </div>            </div>            <h2 class="text-lg font-bold text-gray-700 dark:text-gray-300 mb-4 border-b dark:border-gray-700 pb-2">                <i class="fa-solid fa-users mr-2"></i>Equipe em Atendimento            </h2>            <div id="painel_usuarios" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">                </div>        </div>        <div id="area-relatorios" class="hidden">            <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6 bg-gray-50 dark:bg-gray-700 p-4 rounded border dark:border-gray-600">                <div>                    <label class="block text-sm font-medium dark:text-gray-300">Data Inicial</label>                    <input type="date" id="filtro-data-inicio" class="w-full p-2 border rounded dark:bg-gray-800 dark:text-white dark:border-gray-600">                </div>                <div>                    <label class="block text-sm font-medium dark:text-gray-300">Data Final</label>                    <input type="date" id="filtro-data-fim" class="w-full p-2 border rounded dark:bg-gray-800 dark:text-white dark:border-gray-600">                </div>                <div>                    <label class="block text-sm font-medium dark:text-gray-300">Analista</label>                    <select id="filtro-analista" class="w-full p-2 border rounded dark:bg-gray-800 dark:text-white dark:border-gray-600">                        <option value="">Todos</option>                    </select>                </div>                <div>                    <label class="block text-sm font-medium dark:text-gray-300">Tipo</label>                    <select id="filtro-tipo" class="w-full p-2 border rounded dark:bg-gray-800 dark:text-white dark:border-gray-600">                        <option value="">Todos</option>                    </select>                </div>                <div class="flex items-end">                    <button onclick="buscarRelatorios()" class="w-full bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700 font-bold">                        <i class="fa-solid fa-magnifying-glass mr-2"></i>Buscar                    </button>                </div>            </div>            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 no-print">                <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow border dark:border-gray-700">                    <h3 class="text-center font-bold text-gray-700 dark:text-gray-300 mb-4">                        <i class="fa-solid fa-stopwatch mr-2 text-purple-500"></i>Tempo Médio por Analista (Minutos)                    </h3>                    <div class="relative h-64 w-full">                        <canvas id="graficoTempo"></canvas>                    </div>                </div>                <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow border dark:border-gray-700">                    <h3 class="text-center font-bold text-gray-700 dark:text-gray-300 mb-4">                        <i class="fa-solid fa-chart-pie mr-2 text-blue-500"></i>Volume de Atendimentos                    </h3>                    <div class="relative h-64 w-full">                        <canvas id="graficoAnalistas"></canvas>                    </div>                </div>            </div>            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">                <div class="bg-indigo-50 dark:bg-indigo-900/30 p-4 rounded-lg border border-indigo-200 dark:border-indigo-700 text-center">                    <h3 class="text-sm font-bold text-indigo-800 dark:text-indigo-300 uppercase"><i class="fa-solid fa-ticket mr-2"></i>Total Concluídos</h3>                    <p id="resumo-total" class="text-3xl font-black text-indigo-900 dark:text-indigo-100 mt-2">0</p>                </div>                <div class="bg-green-50 dark:bg-green-900/30 p-4 rounded-lg border border-green-200 dark:border-green-700 text-center">                    <h3 class="text-sm font-bold text-green-800 dark:text-green-300 uppercase"><i class="fa-solid fa-stopwatch mr-2"></i>Tempo Total Gasto</h3>                    <p id="resumo-tempo-total" class="text-3xl font-black text-green-900 dark:text-green-100 mt-2 font-mono">00:00:00</p>                </div>                <div class="bg-purple-50 dark:bg-purple-900/30 p-4 rounded-lg border border-purple-200 dark:border-purple-700 text-center">                    <h3 class="text-sm font-bold text-purple-800 dark:text-purple-300 uppercase"><i class="fa-solid fa-gauge-high mr-2"></i>Tempo Médio / Atendimento</h3>                    <p id="resumo-tempo-medio" class="text-3xl font-black text-purple-900 dark:text-purple-100 mt-2 font-mono">00:00:00</p>                </div>            </div>            <div class="flex justify-end gap-4 mb-4">                <button onclick="exportarCSV()" class="bg-gray-800 text-white px-4 py-2 rounded shadow hover:bg-gray-900 font-bold transition">                    <i class="fa-solid fa-file-csv mr-2"></i>Exportar CSV                </button>                <button onclick="window.print()" class="bg-red-600 text-white px-4 py-2 rounded shadow hover:bg-red-700 font-bold transition">                    <i class="fa-solid fa-file-pdf mr-2"></i>Salvar PDF                </button>            </div>        </div>        <div id="area-finalizados-hoje" class="hidden">            <div class="flex items-center justify-between mb-6">                <div>                    <h2 class="text-xl font-bold text-gray-800 dark:text-white">                        <i class="fa-solid fa-circle-check text-green-500 mr-2"></i>Atendimentos Finalizados Hoje                    </h2>                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Lista de todos os atendimentos concluídos no dia de hoje, agrupados por analista.</p>                </div>                <div class="bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-700 rounded-xl px-6 py-3 text-center">                    <p class="text-xs font-bold text-green-700 dark:text-green-300 uppercase">Total do Dia</p>                    <p id="resumo-finalizados-hoje" class="text-3xl font-black text-green-800 dark:text-green-100 font-mono">0</p>                </div>            </div>            <div class="overflow-x-auto bg-white dark:bg-gray-800 rounded-xl shadow border dark:border-gray-700">                <table class="w-full text-left text-sm">                    <thead>                        <tr class="bg-gray-100 dark:bg-gray-700 border-b dark:border-gray-600">                            <th class="px-4 py-3 font-bold text-gray-700 dark:text-gray-200 w-40"><i class="fa-solid fa-hashtag mr-1"></i>Ticket</th>                            <th class="px-4 py-3 font-bold text-gray-700 dark:text-gray-200"><i class="fa-solid fa-user mr-1"></i>Analista</th>                            <th class="px-4 py-3 font-bold text-gray-700 dark:text-gray-200"><i class="fa-solid fa-tag mr-1"></i>Tipo</th>                        </tr>                    </thead>                    <tbody id="corpo-finalizados-hoje" class="dark:text-gray-200">                        <tr><td colspan="3" class="p-6 text-center text-gray-400 italic">Clique na aba para carregar os dados.</td></tr>                    </tbody>                </table>            </div>        </div>    </div>    <div id="area-impressao" class="max-w-7xl mx-auto px-4 hidden print:block">        <h2 class="text-2xl font-bold mb-4 text-center">Relatório de Atendimentos Concluídos</h2>        <div class="overflow-x-auto bg-white dark:bg-gray-800 rounded shadow">            <table class="w-full text-left border-collapse text-sm">                <thead>                    <tr class="bg-gray-100 dark:bg-gray-700 dark:text-white border-b dark:border-gray-600">                        <th class="p-3">Atendimento</th>                        <th class="p-3">Analista</th>                        <th class="p-3">Tipo</th>                        <th class="p-3">Início</th>                        <th class="p-3">Término</th>                        <th class="p-3">Tempo Útil Gasto</th>                    </tr>                </thead>                <tbody id="corpo-tabela-relatorio" class="dark:text-gray-200">                    <tr><td colspan="6" class="p-4 text-center text-gray-500">Faça uma busca para exibir os resultados.</td></tr>                </tbody>            </table>        </div>    </div>    <div id="modais-container" class="no-print"></div>    <div id="footer-container" class="no-print"></div>    <script src="/js/security.js"></script>    <script src="/js/auth.js"></script>    <script src="/js/usuarios.js"></script>    <script src="/js/configuracoes.js"></script>    <script src="/js/app.js"></script></body></body></html>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Atendimentos - Escalas</title>
+    <link rel="icon" href="/shop_icone.webp" type="image/webp">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        zinc: { 50: '#fafafa', 100: '#f4f4f5', 200: '#e4e4e7', 300: '#d4d4d8', 400: '#a1a1aa', 500: '#71717a', 600: '#52525b', 700: '#3f3f46', 800: '#27272a', 900: '#18181b', 950: '#09090b' },
+                        emerald: { 50: '#ecfdf5', 100: '#d1fae5', 200: '#a7f3d0', 300: '#6ee7b7', 400: '#34d399', 500: '#10b981', 600: '#059669', 700: '#047857', 800: '#065f46', 900: '#064e3b' }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { font-feature-settings: "cv02", "cv03", "cv04", "cv11"; }
+        @media print {
+            body * { visibility: hidden; }
+            #area-impressao, #area-impressao * { visibility: visible; }
+            #area-impressao { position: absolute; left: 0; top: 0; width: 100%; }
+            .no-print { display: none !important; }
+        }
+    </style>
+    <script>
+        if (localStorage.getItem('tema') === 'dark' || localStorage.getItem('theme') === 'dark' || (!('tema' in localStorage) && !('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+</head>
+<body class="font-sans bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 antialiased">
+    <div id="header-container" class="no-print"></div>
+
+    <div id="main-wrapper" class="lg:pl-64 transition-all duration-300 flex flex-col min-h-screen">
+        <main class="max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 no-print flex-1">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                <div>
+                    <h1 class="text-2xl font-semibold text-zinc-900 dark:text-white tracking-tight">Gestão de Atendimentos</h1>
+                    <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">Acompanhe e gerencie os atendimentos da equipe em tempo real.</p>
+                </div>
+                <div class="flex gap-3 items-center">
+                    <div id="box-setor">
+                        <select id="filtro-setor" class="rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white px-3 py-2.5 text-sm ring-1 ring-zinc-900/10 dark:ring-white/10 focus:ring-2 focus:ring-emerald-500 outline-none transition shadow-sm shadow-zinc-900/5 dark:shadow-none"></select>
+                    </div>
+                    <button id="btnNovaPrioridade" onclick="abrirModalPrioridade()" class="hidden text-zinc-700 dark:text-zinc-300 ring-1 ring-inset ring-zinc-900/10 dark:ring-white/10 hover:bg-zinc-50 dark:hover:bg-zinc-800 bg-white dark:bg-zinc-800/50 px-4 py-2.5 rounded-lg shadow-sm transition-colors font-medium text-sm">
+                        <i class="fa-solid fa-star mr-1.5 text-xs"></i>Prioridade
+                    </button>
+                    <button id="btnNovoAtendimento" onclick="abrirModalNovoAtendimento()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2.5 rounded-lg shadow-sm transition-colors font-semibold text-sm">
+                        <i class="fa-solid fa-plus mr-1.5 text-xs"></i>Novo Atendimento
+                    </button>
+                </div>
+            </div>
+
+            <div id="abas-admin" class="hidden mb-6 flex justify-center">
+                <div class="flex gap-1 bg-zinc-100 dark:bg-zinc-800 rounded-lg ring-1 ring-zinc-900/5 dark:ring-white/10 p-1 w-fit mx-auto">
+                    <button onclick="mudarAba('kanban')" id="tab-kanban" class="px-4 py-2 rounded-md text-sm font-medium transition-all bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 shadow-sm">
+                        <i class="fa-solid fa-chalkboard mr-1.5 text-xs"></i>Painel
+                    </button>
+                    <button onclick="mudarAba('dashboard')" id="tab-dashboard" class="px-4 py-2 rounded-md text-sm font-medium transition-all text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200">
+                        <i class="fa-solid fa-chart-pie mr-1.5 text-xs"></i>Dashboard
+                    </button>
+                    <button onclick="mudarAba('relatorios')" id="tab-relatorios" class="px-4 py-2 rounded-md text-sm font-medium transition-all text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200">
+                        <i class="fa-solid fa-table-list mr-1.5 text-xs"></i>Relatórios
+                    </button>
+                    <button onclick="mudarAba('finalizados')" id="tab-finalizados-hoje" class="px-4 py-2 rounded-md text-sm font-medium transition-all text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200">
+                        <i class="fa-solid fa-circle-check mr-1.5 text-xs"></i>Finalizados
+                    </button>
+                </div>
+            </div>
+
+            <div id="area-kanban">
+                <div id="container-fila" class="mb-8 hidden">
+                    <div class="flex items-center gap-2 mb-4">
+                        <div class="w-1.5 h-1.5 rounded-full bg-amber-500"></div>
+                        <h2 class="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest">Fila de Prioridades</h2>
+                    </div>
+                    <div id="fila-cards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"></div>
+                </div>
+
+                <div class="flex items-center gap-2 mb-4">
+                    <div class="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
+                    <h2 class="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest">Equipe em Atendimento</h2>
+                </div>
+                <div id="painel_usuarios" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4"></div>
+            </div>
+
+            <div id="area-filtros-relatorios" class="hidden">
+                <div class="bg-white dark:bg-zinc-800/50 rounded-2xl ring-1 ring-zinc-900/5 dark:ring-white/10 p-5 mb-6 shadow-sm shadow-zinc-900/5 dark:shadow-none">
+                    <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                        <div>
+                            <label class="block text-[11px] font-medium text-zinc-500 dark:text-zinc-400 mb-1.5 uppercase tracking-widest">Data Inicial</label>
+                            <input type="date" id="filtro-data-inicio" class="w-full rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white px-3 py-2.5 text-sm ring-1 ring-zinc-900/10 dark:ring-white/10 focus:ring-2 focus:ring-emerald-500 outline-none transition shadow-sm shadow-zinc-900/5 dark:shadow-none">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-medium text-zinc-500 dark:text-zinc-400 mb-1.5 uppercase tracking-widest">Data Final</label>
+                            <input type="date" id="filtro-data-fim" class="w-full rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white px-3 py-2.5 text-sm ring-1 ring-zinc-900/10 dark:ring-white/10 focus:ring-2 focus:ring-emerald-500 outline-none transition shadow-sm shadow-zinc-900/5 dark:shadow-none">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-medium text-zinc-500 dark:text-zinc-400 mb-1.5 uppercase tracking-widest">Analista</label>
+                            <select id="filtro-analista" class="w-full rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white px-3 py-2.5 text-sm ring-1 ring-zinc-900/10 dark:ring-white/10 focus:ring-2 focus:ring-emerald-500 outline-none transition shadow-sm shadow-zinc-900/5 dark:shadow-none">
+                                <option value="">Todos</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-medium text-zinc-500 dark:text-zinc-400 mb-1.5 uppercase tracking-widest">Tipo</label>
+                            <select id="filtro-tipo" class="w-full rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white px-3 py-2.5 text-sm ring-1 ring-zinc-900/10 dark:ring-white/10 focus:ring-2 focus:ring-emerald-500 outline-none transition shadow-sm shadow-zinc-900/5 dark:shadow-none">
+                                <option value="">Todos</option>
+                            </select>
+                        </div>
+                        <div class="flex items-end">
+                            <button onclick="buscarRelatorios()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2.5 rounded-lg shadow-sm font-semibold text-sm transition-colors">
+                                <i class="fa-solid fa-magnifying-glass mr-1.5 text-xs"></i>Buscar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="area-dashboard" class="hidden">
+                <div class="bg-white dark:bg-zinc-800/50 rounded-2xl ring-1 ring-zinc-900/5 dark:ring-white/10 p-5 mb-6 shadow-sm shadow-zinc-900/5 dark:shadow-none">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-lg font-semibold text-zinc-900 dark:text-white"><i class="fa-solid fa-chart-pie mr-2 text-emerald-500"></i>Painel de Análises (Período Selecionado)</h2>
+                    </div>
+
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                        <div class="bg-emerald-50 dark:bg-emerald-500/10 rounded-xl p-4 ring-1 ring-emerald-200/50 dark:ring-emerald-500/20">
+                            <p class="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-1">Volume Total</p>
+                            <p id="dash-kpi-total" class="text-2xl font-bold text-emerald-700 dark:text-emerald-300">0</p>
+                        </div>
+                        <div class="bg-sky-50 dark:bg-sky-500/10 rounded-xl p-4 ring-1 ring-sky-200/50 dark:ring-sky-500/20">
+                            <p class="text-[11px] font-semibold text-sky-600 dark:text-sky-400 uppercase tracking-widest mb-1">Tempo Médio Geral</p>
+                            <p id="dash-kpi-tm" class="text-2xl font-bold text-sky-700 dark:text-sky-300 font-mono">00:00</p>
+                        </div>
+                        <div class="bg-purple-50 dark:bg-purple-500/10 rounded-xl p-4 ring-1 ring-purple-200/50 dark:ring-purple-500/20">
+                            <p class="text-[11px] font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-widest mb-1">Analista Destaque (Vol)</p>
+                            <p id="dash-kpi-destaque" class="text-lg font-bold text-purple-700 dark:text-purple-300 truncate">-</p>
+                        </div>
+                        <div class="bg-amber-50 dark:bg-amber-500/10 rounded-xl p-4 ring-1 ring-amber-200/50 dark:ring-amber-500/20">
+                            <p class="text-[11px] font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-widest mb-1">Tipo Mais Comum</p>
+                            <p id="dash-kpi-tipo" class="text-lg font-bold text-amber-700 dark:text-amber-300 truncate">-</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                        <div class="bg-white dark:bg-zinc-800 rounded-xl ring-1 ring-zinc-900/5 dark:ring-white/10 p-4">
+                            <h3 class="text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-3"><i class="fa-solid fa-chart-line mr-2 text-indigo-500"></i>Tendência Diária (Volume)</h3>
+                            <div class="relative h-60 w-full"><canvas id="dashChartTendencia"></canvas></div>
+                        </div>
+                        <div class="bg-white dark:bg-zinc-800 rounded-xl ring-1 ring-zinc-900/5 dark:ring-white/10 p-4">
+                            <h3 class="text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-3"><i class="fa-solid fa-chart-column mr-2 text-sky-500"></i>Produtividade por Analista</h3>
+                            <div class="relative h-60 w-full"><canvas id="dashChartProdAnalista"></canvas></div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                        <div class="bg-white dark:bg-zinc-800 rounded-xl ring-1 ring-zinc-900/5 dark:ring-white/10 p-4 lg:col-span-1">
+                            <h3 class="text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-3"><i class="fa-solid fa-chart-pie mr-2 text-amber-500"></i>Distribuição por Tipo</h3>
+                            <div class="relative h-64 w-full"><canvas id="dashChartTipos"></canvas></div>
+                        </div>
+                        <div class="bg-white dark:bg-zinc-800 rounded-xl ring-1 ring-zinc-900/5 dark:ring-white/10 p-4 lg:col-span-2">
+                            <h3 class="text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-3"><i class="fa-solid fa-stopwatch mr-2 text-emerald-500"></i>Tempo Médio por Analista (Minutos)</h3>
+                            <div class="relative h-64 w-full"><canvas id="dashChartTmAnalista"></canvas></div>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 gap-6 mb-2">
+                        <div class="bg-white dark:bg-zinc-800 rounded-xl ring-1 ring-zinc-900/5 dark:ring-white/10 p-4">
+                            <h3 class="text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-3"><i class="fa-solid fa-tags mr-2 text-rose-500"></i>Tempo Médio por Tipo de Atendimento (Minutos)</h3>
+                            <div class="relative h-64 w-full"><canvas id="dashChartTmTipo"></canvas></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="area-relatorios" class="hidden">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 no-print">
+                    <div class="bg-white dark:bg-zinc-800/50 rounded-2xl ring-1 ring-zinc-900/5 dark:ring-white/10 p-5 shadow-sm shadow-zinc-900/5 dark:shadow-none">
+                        <h3 class="text-sm font-semibold text-zinc-600 dark:text-zinc-300 mb-4 flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                            Tempo Médio por Analista (min)
+                        </h3>
+                        <div class="relative h-64 w-full"><canvas id="graficoTempo"></canvas></div>
+                    </div>
+                    <div class="bg-white dark:bg-zinc-800/50 rounded-2xl ring-1 ring-zinc-900/5 dark:ring-white/10 p-5 shadow-sm shadow-zinc-900/5 dark:shadow-none">
+                        <h3 class="text-sm font-semibold text-zinc-600 dark:text-zinc-300 mb-4 flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-sky-500"></span>
+                            Volume de Atendimentos
+                        </h3>
+                        <div class="relative h-64 w-full"><canvas id="graficoAnalistas"></canvas></div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="bg-white dark:bg-zinc-800/50 rounded-2xl ring-1 ring-zinc-900/5 dark:ring-white/10 p-5 text-center shadow-sm shadow-zinc-900/5 dark:shadow-none">
+                        <p class="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-2">Total Concluídos</p>
+                        <p id="resumo-total" class="text-3xl font-bold text-zinc-900 dark:text-white tabular-nums">0</p>
+                    </div>
+                    <div class="bg-white dark:bg-zinc-800/50 rounded-2xl ring-1 ring-zinc-900/5 dark:ring-white/10 p-5 text-center shadow-sm shadow-zinc-900/5 dark:shadow-none">
+                        <p class="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-2">Tempo Total</p>
+                        <p id="resumo-tempo-total" class="text-3xl font-bold text-emerald-500 dark:text-emerald-400 font-mono tabular-nums">00:00:00</p>
+                    </div>
+                    <div class="bg-white dark:bg-zinc-800/50 rounded-2xl ring-1 ring-zinc-900/5 dark:ring-white/10 p-5 text-center shadow-sm shadow-zinc-900/5 dark:shadow-none">
+                        <p class="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-2">Tempo Médio</p>
+                        <p id="resumo-tempo-medio" class="text-3xl font-bold text-sky-500 dark:text-sky-400 font-mono tabular-nums">00:00:00</p>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-3 mb-6">
+                    <button onclick="exportarCSV()" class="text-zinc-700 dark:text-zinc-300 ring-1 ring-inset ring-zinc-900/10 dark:ring-white/10 hover:bg-zinc-50 dark:hover:bg-zinc-800 bg-white dark:bg-zinc-800/50 px-4 py-2 rounded-lg shadow-sm font-medium text-sm transition-colors">
+                        <i class="fa-solid fa-file-csv mr-1.5 text-xs"></i>CSV
+                    </button>
+                    <button onclick="window.print()" class="text-zinc-700 dark:text-zinc-300 ring-1 ring-inset ring-zinc-900/10 dark:ring-white/10 hover:bg-zinc-50 dark:hover:bg-zinc-800 bg-white dark:bg-zinc-800/50 px-4 py-2 rounded-lg shadow-sm font-medium text-sm transition-colors">
+                        <i class="fa-solid fa-file-pdf mr-1.5 text-xs"></i>PDF
+                    </button>
+                </div>
+            </div>
+
+            <div id="area-finalizados-hoje" class="hidden">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h2 class="text-lg font-semibold text-zinc-900 dark:text-white">Finalizados Hoje</h2>
+                        <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Atendimentos concluídos no dia de hoje.</p>
+                    </div>
+                    <div class="bg-emerald-50 dark:bg-emerald-500/10 ring-1 ring-emerald-200/50 dark:ring-emerald-500/20 rounded-2xl px-5 py-3 text-center">
+                        <p class="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">Total</p>
+                        <p id="resumo-finalizados-hoje" class="text-2xl font-bold text-emerald-700 dark:text-emerald-300 font-mono tabular-nums">0</p>
+                    </div>
+                </div>
+                <div class="bg-white dark:bg-zinc-800/50 rounded-2xl ring-1 ring-zinc-900/5 dark:ring-white/10 overflow-hidden shadow-sm shadow-zinc-900/5 dark:shadow-none">
+                    <table class="w-full text-left text-sm">
+                        <thead>
+                            <tr class="border-b border-zinc-100 dark:border-zinc-800">
+                                <th class="px-5 py-3 text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Ticket</th>
+                                <th class="px-5 py-3 text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Analista</th>
+                                <th class="px-5 py-3 text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Tipo</th>
+                            </tr>
+                        </thead>
+                        <tbody id="corpo-finalizados-hoje" class="text-sm text-zinc-700 dark:text-zinc-300">
+                            <tr><td colspan="3" class="p-6 text-center text-zinc-400 dark:text-zinc-500 text-xs">Clique na aba para carregar.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            </div>
+        </main>
+
+        <div id="area-impressao" class="max-w-6xl mx-auto px-4 hidden print:block">
+            <h2 class="text-2xl font-semibold mb-4 text-center">Relatório de Atendimentos Concluídos</h2>
+            <div class="overflow-x-auto bg-white dark:bg-zinc-800 rounded-2xl shadow-sm">
+                <table class="w-full text-left border-collapse text-sm">
+                    <thead>
+                        <tr class="bg-zinc-50 dark:bg-zinc-800 border-b border-zinc-200 dark:border-zinc-700">
+                            <th class="p-3 text-[11px] font-semibold uppercase tracking-widest">Atendimento</th>
+                            <th class="p-3 text-[11px] font-semibold uppercase tracking-widest">Analista</th>
+                            <th class="p-3 text-[11px] font-semibold uppercase tracking-widest">Tipo</th>
+                            <th class="p-3 text-[11px] font-semibold uppercase tracking-widest">Início</th>
+                            <th class="p-3 text-[11px] font-semibold uppercase tracking-widest">Término</th>
+                            <th class="p-3 text-[11px] font-semibold uppercase tracking-widest">Tempo Útil</th>
+                        </tr>
+                    </thead>
+                    <tbody id="corpo-tabela-relatorio" class="text-sm text-zinc-700 dark:text-zinc-300">
+                        <tr><td colspan="6" class="p-4 text-center text-zinc-400">Faça uma busca para exibir os resultados.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 no-print mt-auto">
+            <div id="footer-container"></div>
+        </div>
+    </div>
+
+    <div id="modais-container" class="no-print"></div>
+    <script src="/js/security.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/usuarios.js"></script>
+    <script src="/js/configuracoes.js"></script>
+    <script src="/js/app.js?v=3"></script>
+</body>
+</html>

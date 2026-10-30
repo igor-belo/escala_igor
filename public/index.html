@@ -1,1 +1,129 @@
-<!DOCTYPE html><html lang="pt-BR"><head>    <meta charset="UTF-8">    <meta name="viewport" content="width=device-width, initial-scale=1.0">    <title>Dashboard - Escalas</title>    <script src="https://cdn.tailwindcss.com"></script>    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">    <script>tailwind.config = { darkMode: 'class' }</script>    <style>        .dark .fc { color: #e5e7eb; }        .dark .fc-theme-standard td, .dark .fc-theme-standard th, .dark .fc-theme-standard .fc-scrollgrid { border-color: #374151; }        /* ILUMINAÇÃO AZUL NO DIA ATUAL DO CALENDÁRIO */        .fc-day-today {            background-color: rgba(59, 130, 246, 0.1) !important;            box-shadow: inset 0 0 15px rgba(59, 130, 246, 0.4), inset 0 0 0 2px #3b82f6 !important;         }        .dark .fc-day-today {            background-color: rgba(59, 130, 246, 0.2) !important;            box-shadow: inset 0 0 20px rgba(59, 130, 246, 0.6), inset 0 0 0 2px #3b82f6 !important;        }        input[type="time"], input[type="date"] { color-scheme: light dark; }        .fc-event { cursor: pointer; border: none !important; }        .evento-editado { border-left: 4px solid #ef4444 !important; }        .fc-daygrid-day-frame { cursor: pointer; }        .evento-aviso { font-size: 0.85rem !important; font-weight: 700 !important; padding: 3px 4px !important; margin-top: 6px !important; border-radius: 4px !important; box-shadow: 0 1px 3px rgba(239, 68, 68, 0.4) !important;}    </style><script>    if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {        document.documentElement.classList.add('dark');    } else {        document.documentElement.classList.remove('dark');    }</script></head><body class="bg-gray-100 dark:bg-gray-900 p-4 md:p-6 ">    <div id="header-container"></div>    <div class="max-w-7xl mx-auto bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">        <div class="flex justify-between items-center mb-6 border-b pb-4 dark:border-gray-700">            <h1 class="text-2xl font-bold dark:text-white">Controle de Escalas</h1>        </div>        <div id="barra-filtros" class="flex flex-col md:flex-row justify-between items-end gap-4 mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded border dark:border-gray-600">            <div id="box-setor" class="w-full md:w-1/3">                <label class="block text-sm font-medium dark:text-gray-300 mb-1">Filtrar Calendário por Setor</label>                <select id="filtro-setor" class="block w-full rounded dark:bg-gray-800 dark:text-white p-2 border dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none transition"></select>            </div>            <div id="box-gerador-admin" class="hidden flex flex-col md:flex-row gap-2 w-full md:w-auto">                <button onclick="abrirModalGeradorPersonalizado()" class="w-full md:w-auto bg-purple-600 text-white px-6 py-2 rounded shadow hover:bg-purple-700 font-bold transition flex items-center justify-center gap-2">                    <i class="fa-solid fa-wand-magic-sparkles"></i> Gerador de Escalas                </button>                <button id="btnExportar" onclick="abrirModalRelatorioEscala()" class="w-full md:w-auto bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700 font-bold transition flex items-center justify-center gap-2">                    <i class="fa-solid fa-file-csv"></i> Exportar Relatório                </button>            </div>        </div>        <p class="text-sm text-gray-500 dark:text-gray-400 mb-2 italic">* Clique em um dia vazio para adicionar uma observação ou agendamento.</p>        <div id='calendar' class="dark:text-white min-h-[600px]"></div>    </div>    <div id="modais-container"></div>    <div id="footer-container"></div>    <script src="/js/security.js"></script>    <script src="/js/auth.js"></script>    <script src="/js/usuarios.js"></script>    <script src="/js/configuracoes.js"></script>    <script src="/js/app.js"></script></body></html>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Escalas - Dashboard</title>
+    <link rel="icon" href="/shop_icone.webp" type="image/webp">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        zinc: { 50: '#fafafa', 100: '#f4f4f5', 200: '#e4e4e7', 300: '#d4d4d8', 400: '#a1a1aa', 500: '#71717a', 600: '#52525b', 700: '#3f3f46', 800: '#27272a', 900: '#18181b', 950: '#09090b' },
+                        emerald: { 50: '#ecfdf5', 100: '#d1fae5', 200: '#a7f3d0', 300: '#6ee7b7', 400: '#34d399', 500: '#10b981', 600: '#059669', 700: '#047857', 800: '#065f46', 900: '#064e3b' }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        * { font-feature-settings: "cv02", "cv03", "cv04", "cv11"; }
+
+        .dark .fc { color: #f4f4f5; }
+        .dark .fc-theme-standard td, .dark .fc-theme-standard th, .dark .fc-theme-standard .fc-scrollgrid { border-color: #27272a; }
+        .fc .fc-button-group { display: flex !important; gap: 0.4rem !important; }
+        .fc .fc-button { margin: 0 !important; background-color: transparent !important; border: 1px solid rgba(16, 185, 129, 0.3) !important; color: #059669 !important; border-radius: 0.5rem !important; font-weight: 500 !important; font-size: 0.75rem !important; padding: 0.35rem 0.75rem !important; text-transform: capitalize !important; transition: all 0.2s ease !important; box-shadow: none !important; }
+        .fc .fc-button:hover { background-color: rgba(16, 185, 129, 0.08) !important; }
+        .fc .fc-button-active { background-color: #10b981 !important; border-color: #10b981 !important; color: white !important; box-shadow: none !important; }
+        .dark .fc .fc-button { color: #34d399 !important; border-color: rgba(16, 185, 129, 0.25) !important; }
+        .dark .fc .fc-button-active { color: white !important; background-color: #059669 !important; border-color: #059669 !important; }
+        .fc .fc-toolbar-title { font-weight: 600 !important; font-size: 1.1rem !important; color: inherit !important; }
+        .fc-day-today {
+            background-color: rgba(16, 185, 129, 0.04) !important;
+            box-shadow: inset 0 0 0 2px rgba(16, 185, 129, 0.2) !important;
+        }
+        .dark .fc-day-today {
+            background-color: rgba(16, 185, 129, 0.08) !important;
+            box-shadow: inset 0 0 0 2px rgba(16, 185, 129, 0.3) !important;
+        }
+        input[type="time"], input[type="date"] { color-scheme: light dark; }
+        .fc-event { cursor: pointer; border: none !important; border-radius: 6px !important; font-size: 0.78rem !important; font-weight: 500 !important; }
+        .evento-editado { border-left: 3px solid #ef4444 !important; }
+        .fc-daygrid-day-frame { cursor: pointer; }
+        .evento-aviso { font-size: 0.78rem !important; font-weight: 600 !important; padding: 3px 6px !important; margin-top: 4px !important; border-radius: 6px !important; box-shadow: 0 1px 2px rgba(239, 68, 68, 0.25) !important; }
+        .fc-col-header-cell { font-size: 0.75rem !important; font-weight: 600 !important; text-transform: uppercase !important; letter-spacing: 0.05em !important; }
+        .dark .fc-col-header-cell-cushion { color: #a1a1aa !important; }
+        .fc-col-header-cell-cushion { color: #71717a !important; }
+
+        /* Custom Scrollbar for Calendar */
+        .fc *::-webkit-scrollbar { width: 8px; height: 8px; }
+        .fc *::-webkit-scrollbar-track { background: transparent; }
+        .fc *::-webkit-scrollbar-thumb { background: #d4d4d8; border-radius: 4px; border: 2px solid transparent; background-clip: padding-box; }
+        .fc *::-webkit-scrollbar-thumb:hover { background: #a1a1aa; border: 2px solid transparent; background-clip: padding-box; }
+        .dark .fc *::-webkit-scrollbar-thumb { background: #3f3f46; border: 2px solid transparent; background-clip: padding-box; }
+        .dark .fc *::-webkit-scrollbar-thumb:hover { background: #52525b; border: 2px solid transparent; background-clip: padding-box; }
+    </style>
+    <script>
+        if (localStorage.getItem('tema') === 'dark' || localStorage.getItem('theme') === 'dark' || (!('tema' in localStorage) && !('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+</head>
+<body class="font-sans bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 antialiased">
+    <div id="header-container"></div>
+
+    <div id="main-wrapper" class="lg:pl-64 transition-all duration-300 flex flex-col min-h-screen">
+        <main class="max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
+            <div class="mb-8">
+                <h1 class="text-2xl font-semibold text-zinc-900 dark:text-white tracking-tight">Controle de Escalas</h1>
+                <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">Gerencie as escalas da equipe e visualize o calendário de atividades.</p>
+            </div>
+
+            <div id="barra-filtros" class="mb-6">
+                <div class="bg-white dark:bg-zinc-800/50 rounded-2xl ring-1 ring-zinc-900/5 dark:ring-white/10 p-5 shadow-sm shadow-zinc-900/5 dark:shadow-none">
+                    <div class="flex flex-col md:flex-row justify-between items-end gap-4">
+                        <div id="box-setor" class="w-full md:w-1/3">
+                            <label class="block text-[11px] font-medium text-zinc-500 dark:text-zinc-400 mb-1.5 uppercase tracking-widest">Setor</label>
+                            <select id="filtro-setor" class="block w-full rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white px-3 py-2.5 text-sm ring-1 ring-zinc-900/10 dark:ring-white/10 focus:ring-2 focus:ring-emerald-500 outline-none transition shadow-sm shadow-zinc-900/5 dark:shadow-none"></select>
+                        </div>
+                        <div id="box-gerador-admin" class="hidden flex flex-col md:flex-row gap-2 w-full md:w-auto items-center">
+                            <label class="flex items-center gap-2 cursor-pointer bg-white dark:bg-zinc-800/50 px-4 py-2.5 rounded-lg ring-1 ring-inset ring-zinc-900/10 dark:ring-white/10 shadow-sm transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800 w-full md:w-auto">
+                                <input type="checkbox" id="chk-apenas-escala" class="w-4 h-4 text-emerald-500 rounded border-zinc-300 dark:border-zinc-600 focus:ring-emerald-500 bg-white dark:bg-zinc-900" onchange="if(calendar) calendar.refetchEvents()">
+                                <span class="text-sm font-medium text-zinc-700 dark:text-zinc-300">Apenas Escala</span>
+                            </label>
+                            <button onclick="abrirModalGeradorPersonalizado()" class="w-full md:w-auto bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-lg shadow-sm font-semibold text-sm transition-colors flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-wand-magic-sparkles text-xs"></i> Gerador de Escalas
+                            </button>
+                            <button id="btnExportar" onclick="abrirModalRelatorioEscala()" class="w-full md:w-auto text-zinc-700 dark:text-zinc-300 ring-1 ring-inset ring-zinc-900/10 dark:ring-white/10 hover:bg-zinc-50 dark:hover:bg-zinc-800 bg-white dark:bg-zinc-800/50 px-5 py-2.5 rounded-lg shadow-sm font-medium text-sm transition-colors flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-file-csv text-xs"></i> Exportar Relatório
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-zinc-800/50 rounded-2xl ring-1 ring-zinc-900/5 dark:ring-white/10 p-6 shadow-sm shadow-zinc-900/5 dark:shadow-none">
+                <p class="text-xs text-zinc-400 dark:text-zinc-500 mb-4 flex items-center gap-1.5">
+                    <i class="fa-solid fa-circle-info text-emerald-500"></i>
+                    Clique em um dia vazio para adicionar uma observação ou agendamento.
+                </p>
+                <div id='calendar' class="min-h-[600px]"></div>
+            </div>
+        </main>
+
+        <div class="max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 mt-auto">
+            <div id="footer-container"></div>
+        </div>
+    </div>
+
+    <div id="modais-container"></div>
+    <script src="/js/security.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/usuarios.js"></script>
+    <script src="/js/configuracoes.js"></script>
+    <script src="/js/app.js?v=3"></script>
+</body>
+</html>

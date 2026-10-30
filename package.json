@@ -1,21 +1,54 @@
 {
   "name": "escala",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Sistema de Gerenciamento de Escala com Supabase",
+  "main": "server.js",
+  "bin": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "node server.js",
+    "build": "pkg . --targets node18-win-x64 --output escala-server.exe",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "security-check": "node pre-commit-check.js",
+    "vercel-build": "echo 'Build complete'"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "pkg": {
+    "assets": [
+      "public/**/*"
+    ]
+  },
+  "keywords": [
+    "escala",
+    "gerenciamento",
+    "supabase",
+    "atendimentos"
+  ],
+  "author": "Igor Belo Amaral <igorbelo.sup.shop@alterdata.com.br>",
+  "license": "UNLICENSED",
+  "private": true,
   "type": "commonjs",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "dependencies": {
+    "@supabase/supabase-js": "^2.39.3",
+    "@supabase/supabase-js": "^2.118.0",
     "bcryptjs": "^3.0.3",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
-    "pg": "^8.20.0"
+    "express-rate-limit": "^8.6.0",
+    "google-auth-library": "^10.9.0",
+    "helmet": "^8.3.0",
+    "jsonwebtoken": "^9.0.3",
+    "node-cron": "^4.6.0",
+    "node-windows": "^1.0.0-beta.8",
+    "pg": "^8.20.0",
+    "puppeteer": "^25.3.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "pkg": "^5.8.1"
   }
 }
