@@ -2,7 +2,7 @@ const pool = require("../config/db");
 exports.listarAtivos = async (req, res) => {
   try {
     const { setor_id } = req.query;
-    let query = `SELECT a.*, t.nome as tipo_nome FROM atendimentos a JOIN tipos_atendimento t ON a.tipo_id = t.id WHERE a.status IN ('EM_ANDAMENTO', 'PAUSADO')`;
+    let query = `SELECT a.*, t.nome as tipo_nome FROM atendimentos a LEFT JOIN tipos t ON a.tipo_id = t.id WHERE a.status IN ('EM_ANDAMENTO', 'PAUSADO')`;
     const params = [];
     if (setor_id && setor_id !== "todos") {
       query += ` AND a.setor_id = $1`;
@@ -97,7 +97,7 @@ exports.transferirAtendimento = async (req, res) => {
 exports.listarConcluidos = async (req, res) => {
   try {
     const { setor_id, data_inicio, data_fim, usuario_id, tipo_id } = req.query;
-    let query = `SELECT a.*, t.nome as tipo_nome, u.nome as usuario_nome FROM atendimentos a JOIN tipos_atendimento t ON a.tipo_id = t.id JOIN usuarios u ON a.usuario_id = u.id WHERE a.status IN ('CONCLUIDO', 'TRANSFERIDO')`;
+    let query = `SELECT a.*, t.nome as tipo_nome, u.nome as usuario_nome FROM atendimentos a LEFT JOIN tipos t ON a.tipo_id = t.id LEFT JOIN usuarios u ON a.usuario_id = u.id WHERE a.status IN ('CONCLUIDO', 'TRANSFERIDO')`;
     const params = [];
     let paramIndex = 1;
     if (setor_id && setor_id !== "todos") {
@@ -143,7 +143,7 @@ exports.cadastrarFila = async (req, res) => {
 exports.listarFila = async (req, res) => {
   try {
     const { setor_id } = req.query;
-    let query = `SELECT a.*, t.nome as tipo_nome FROM atendimentos a JOIN tipos_atendimento t ON a.tipo_id = t.id WHERE a.status = 'PENDENTE'`;
+    let query = `SELECT a.*, t.nome as tipo_nome FROM atendimentos a LEFT JOIN tipos t ON a.tipo_id = t.id WHERE a.status = 'PENDENTE'`;
     const params = [];
     if (setor_id && setor_id !== "todos") {
       query += ` AND a.setor_id = $1`;
