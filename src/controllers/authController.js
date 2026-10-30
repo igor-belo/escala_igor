@@ -2,25 +2,53 @@ const pool = require("../config/db");
 const bcrypt = require("bcryptjs");
 const { OAuth2Client } = require("google-auth-library");
 const { signToken, setTokenCookie, clearTokenCookie } = require("../core");
+const { registrarLog, extrairInfoRequisicao } = require("../services/auditService");
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 exports.login = async (req, res) => {
+  const reqInfo = extrairInfoRequisicao(req);
   try {
     const { identificador, senha } = req.body;
     const resUser = await pool.query(
       "SELECT * FROM usuarios WHERE email = $1 OR login = $1",
       [identificador],
     );
-    if (resUser.rows.length === 0)
+    if (resUser.rows.length === 0) {
+      // Log de falha de login
+      await registrarLog({
+        usuario_id: null,
+        usuario_nome: identificador,
+        acao: 'LOGIN_FALHA',
+        detalhes: { motivo: 'Usuário não encontrado' },
+        ...reqInfo
+      });
       return res.status(401).json({ erro: "Usuário não encontrado" });
+    }
     const usuario = resUser.rows[0];
-    if (usuario.ativo === false)
+    if (usuario.ativo === false) {
+      await registrarLog({
+        usuario_id: usuario.id,
+        usuario_nome: usuario.nome,
+        acao: 'LOGIN_FALHA',
+        detalhes: { motivo: 'Usuário inativo' },
+        ...reqInfo
+      });
       return res
         .status(403)
         .json({ erro: "Usuário inativo. Procure o administrador." });
+    }
     const senhaValida = await bcrypt.compare(senha, usuario.senha);
-    if (!senhaValida) return res.status(401).json({ erro: "Senha incorreta" });
+    if (!senhaValida) {
+      await registrarLog({
+        usuario_id: usuario.id,
+        usuario_nome: usuario.nome,
+        acao: 'LOGIN_FALHA',
+        detalhes: { motivo: 'Senha incorreta' },
+        ...reqInfo
+      });
+      return res.status(401).json({ erro: "Senha incorreta" });
+    }
     const usuarioFront = {
       id: usuario.id,
       nome: usuario.nome,
@@ -32,6 +60,14 @@ exports.login = async (req, res) => {
     };
 
     const token = signToken({ id: usuario.id, email: usuario.email, tipo_perfil: usuario.tipo_perfil });
+
+    // Log de sucesso de login
+    await registrarLog({
+      usuario_id: usuario.id,
+      usuario_nome: usuario.nome,
+      acao: 'LOGIN_SUCESSO',
+      ...reqInfo
+    });
 
     setTokenCookie(res, token);
     res.json({ sucesso: true, usuario: usuarioFront });
@@ -48,6 +84,21 @@ exports.alterarSenha = async (req, res) => {
       "UPDATE usuarios SET senha = $1, primeiro_acesso = false WHERE id = $2",
       [senhaCripto, id],
     );
+    
+    // Buscar nome do usuário
+    const resUser = await pool.query("SELECT nome FROM usuarios WHERE id = $1", [id]);
+    const nomeUsuario = resUser.rows[0]?.nome || 'Desconhecido';
+    
+    // Log de alteração de senha
+    await registrarLog({
+      usuario_id: id,
+      usuario_nome: nomeUsuario,
+      acao: 'SENHA_ALTERADA',
+      tabela: 'usuarios',
+      registro_id: id,
+      ...extrairInfoRequisicao(req)
+    });
+    
     const token = signToken({ id, email: req.body.email || 'unknown', tipo_perfil: 'unknown' });
     setTokenCookie(res, token);
     res.json({ sucesso: true });
@@ -104,7 +155,20 @@ exports.loginGoogle = async (req, res) => {
   }
 };
 
-exports.logout = (req, res) => {
+exports.logout = async (req, res) => {
+  try {
+    // Tentar pegar o usuário do token antes de limpar
+    if (req.user) {
+      await registrarLog({
+        usuario_id: req.user.id,
+        usuario_nome: req.user.nome || req.user.email,
+        acao: 'LOGOUT',
+        ...extrairInfoRequisicao(req)
+      });
+    }
+  } catch (e) {
+    // Não falhar se o log der erro
+  }
   clearTokenCookie(res);
   res.json({ sucesso: true });
 };

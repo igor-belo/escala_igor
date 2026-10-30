@@ -98,6 +98,7 @@ app.use('/api/setores', authMiddleware, setoresRoutes);
 app.use('/api/tipos_atendimento', authMiddleware, tiposRoutes);
 app.use('/api/usuarios', authMiddleware, usuariosRoutes);
 app.use('/api/atendimentos', authMiddleware, atendimentosRoutes);
+app.use('/api/logs', require('./src/routes/logsRoutes'));
 app.use('/api/escala', authMiddleware, escalaRoutes);
 app.use('/api/observacoes', authMiddleware, observacoesRoutes);
 app.use('/api/alinhamentos', authMiddleware, alinhamentosRoutes);

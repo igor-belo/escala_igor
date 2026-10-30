@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logs de Auditoria</title>
+    <link rel="icon" href="/shop_icone.webp" type="image/webp">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = { darkMode: 'class', theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] } } } };
+        if (localStorage.getItem('tema') === 'dark' || (!('tema' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
+</head>
+<body class="font-sans bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100">
+    <div id="header-container"></div>
+
+    <div id="main-wrapper" class="lg:pl-64 transition-all duration-300 flex flex-col min-h-screen">
+        <main class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
+            <div class="mb-8">
+                <h1 class="text-2xl font-semibold text-zinc-900 dark:text-white tracking-tight">Logs de Auditoria</h1>
+                <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">Histórico de ações no sistema</p>
+            </div>
+
+            <!-- Filtros -->
+            <div class="bg-white dark:bg-zinc-800/50 rounded-2xl ring-1 ring-zinc-900/5 dark:ring-white/10 p-5 mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1.5">Ação</label>
+                        <select id="filtro-acao" class="w-full rounded-lg bg-white dark:bg-zinc-800 px-3 py-2 text-sm ring-1 ring-zinc-900/10 dark:ring-white/10">
+                            <option value="">Todas</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1.5">Tabela</label>
+                        <select id="filtro-tabela" class="w-full rounded-lg bg-white dark:bg-zinc-800 px-3 py-2 text-sm ring-1 ring-zinc-900/10 dark:ring-white/10">
+                            <option value="">Todas</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1.5">Data Início</label>
+                        <input type="date" id="filtro-data-inicio" class="w-full rounded-lg bg-white dark:bg-zinc-800 px-3 py-2 text-sm ring-1 ring-zinc-900/10 dark:ring-white/10">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1.5">Data Fim</label>
+                        <input type="date" id="filtro-data-fim" class="w-full rounded-lg bg-white dark:bg-zinc-800 px-3 py-2 text-sm ring-1 ring-zinc-900/10 dark:ring-white/10">
+                    </div>
+                </div>
+                <div class="flex gap-2 mt-4">
+                    <button onclick="carregarLogs()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium">
+                        <i class="fa-solid fa-filter mr-2"></i>Filtrar
+                    </button>
+                    <button onclick="limparFiltros()" class="text-zinc-700 dark:text-zinc-300 px-4 py-2 rounded-lg text-sm font-medium ring-1 ring-inset ring-zinc-900/10 dark:ring-white/10">
+                        Limpar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tabela de Logs -->
+            <div class="bg-white dark:bg-zinc-800/50 rounded-2xl ring-1 ring-zinc-900/5 dark:ring-white/10 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-zinc-50 dark:bg-zinc-800/80">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-zinc-600 dark:text-zinc-400 uppercase">Data/Hora</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-zinc-600 dark:text-zinc-400 uppercase">Usuário</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-zinc-600 dark:text-zinc-400 uppercase">Ação</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-zinc-600 dark:text-zinc-400 uppercase">Tabela</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-zinc-600 dark:text-zinc-400 uppercase">Detalhes</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-zinc-600 dark:text-zinc-400 uppercase">IP</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-logs" class="divide-y divide-zinc-200 dark:divide-zinc-700">
+                            <tr>
+                                <td colspan="6" class="px-4 py-8 text-center text-sm text-zinc-500">
+                                    <i class="fa-solid fa-spinner fa-spin mr-2"></i>Carregando logs...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Paginação -->
+            <div id="paginacao" class="flex justify-between items-center mt-4 text-sm text-zinc-600 dark:text-zinc-400">
+                <div id="info-paginacao"></div>
+                <div id="controles-paginacao" class="flex gap-2"></div>
+            </div>
+        </main>
+
+        <div class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 mt-auto">
+            <div id="footer-container"></div>
+        </div>
+    </div>
+
+    <script src="/js/security.js"></script>
+    <script src="/js/auth.js"></script>
+    <script>
+        let paginaAtual = 1;
+        const limitePorPagina = 50;
+
+        async function carregarLogs(pagina = 1) {
+            paginaAtual = pagina;
+            const acao = document.getElementById('filtro-acao').value;
+            const tabela = document.getElementById('filtro-tabela').value;
+            const dataInicio = document.getElementById('filtro-data-inicio').value;
+            const dataFim = document.getElementById('filtro-data-fim').value;
+
+            const params = new URLSearchParams({ page: pagina, limit: limitePorPagina });
+            if (acao) params.append('acao', acao);
+            if (tabela) params.append('tabela', tabela);
+            if (dataInicio) params.append('data_inicio', dataInicio);
+            if (dataFim) params.append('data_fim', dataFim);
+
+            try {
+                const res = await fetch(`/api/logs?${params}`, { credentials: 'include' });
+                if (!res.ok) throw new Error('Erro ao carregar logs');
+                const data = await res.json();
+                renderizarLogs(data.logs);
+                renderizarPaginacao(data.pagination);
+            } catch (e) {
+                document.getElementById('tbody-logs').innerHTML = `
+                    <tr><td colspan="6" class="px-4 py-8 text-center text-sm text-red-500">
+                        <i class="fa-solid fa-exclamation-triangle mr-2"></i>${e.message}
+                    </td></tr>
+                `;
+            }
+        }
+
+        function renderizarLogs(logs) {
+            const tbody = document.getElementById('tbody-logs');
+            if (logs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-sm text-zinc-500">Nenhum log encontrado</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = logs.map(log => {
+                const data = new Date(log.criado_em).toLocaleString('pt-BR');
+                const detalhes = log.detalhes ? JSON.stringify(log.detalhes, null, 2) : '-';
+                const acaoCor = getAcaoCor(log.acao);
+                
+                return `
+                    <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
+                        <td class="px-4 py-3 text-sm">${data}</td>
+                        <td class="px-4 py-3 text-sm">${log.usuario_nome || 'Sistema'}</td>
+                        <td class="px-4 py-3">
+                            <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full ${acaoCor}">
+                                ${log.acao}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3 text-sm">${log.tabela || '-'}</td>
+                        <td class="px-4 py-3 text-xs font-mono max-w-xs truncate" title="${detalhes}">${detalhes}</td>
+                        <td class="px-4 py-3 text-xs text-zinc-500">${log.ip_address || '-'}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function getAcaoCor(acao) {
+            if (acao.includes('CRIADO') || acao.includes('SUCESSO')) return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400';
+            if (acao.includes('EDITADO') || acao.includes('ALTERADA')) return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
+            if (acao.includes('EXCLUIDO') || acao.includes('INATIVADO') || acao.includes('FALHA')) return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
+            return 'bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-400';
+        }
+
+        function renderizarPaginacao(pagination) {
+            document.getElementById('info-paginacao').textContent = `Página ${pagination.page} de ${pagination.total_pages} (Total: ${pagination.total} registros)`;
+            
+            const controles = document.getElementById('controles-paginacao');
+            controles.innerHTML = '';
+            
+            if (pagination.page > 1) {
+                controles.innerHTML += `<button onclick="carregarLogs(${pagination.page - 1})" class="px-3 py-1 rounded-lg ring-1 ring-zinc-300 dark:ring-zinc-600 hover:bg-zinc-100 dark:hover:bg-zinc-800">Anterior</button>`;
+            }
+            if (pagination.page < pagination.total_pages) {
+                controles.innerHTML += `<button onclick="carregarLogs(${pagination.page + 1})" class="px-3 py-1 rounded-lg ring-1 ring-zinc-300 dark:ring-zinc-600 hover:bg-zinc-100 dark:hover:bg-zinc-800">Próximo</button>`;
+            }
+        }
+
+        async function carregarFiltros() {
+            try {
+                const [acoes, tabelas] = await Promise.all([
+                    fetch('/api/logs/acoes', { credentials: 'include' }).then(r => r.json()),
+                    fetch('/api/logs/tabelas', { credentials: 'include' }).then(r => r.json())
+                ]);
+                
+                const selectAcao = document.getElementById('filtro-acao');
+                acoes.forEach(acao => {
+                    selectAcao.innerHTML += `<option value="${acao}">${acao}</option>`;
+                });
+                
+                const selectTabela = document.getElementById('filtro-tabela');
+                tabelas.forEach(tabela => {
+                    selectTabela.innerHTML += `<option value="${tabela}">${tabela}</option>`;
+                });
+            } catch (e) {
+                console.error('Erro ao carregar filtros:', e);
+            }
+        }
+
+        function limparFiltros() {
+            document.getElementById('filtro-acao').value = '';
+            document.getElementById('filtro-tabela').value = '';
+            document.getElementById('filtro-data-inicio').value = '';
+            document.getElementById('filtro-data-fim').value = '';
+            carregarLogs(1);
+        }
+
+        // Carregar ao iniciar
+        document.addEventListener('DOMContentLoaded', () => {
+            fetch('/components/header.html').then(r => r.text()).then(html => {
+                document.getElementById('header-container').innerHTML = html;
+                inicializarHeader();
+            });
+            fetch('/components/footer.html').then(r => r.text()).then(html => {
+                document.getElementById('footer-container').innerHTML = html;
+            });
+            
+            carregarFiltros();
+            carregarLogs();
+        });
+    </script>
+</body>
+</html>

@@ -1,4 +1,5 @@
 const pool = require("../config/db");
+const { registrarLog, extrairInfoRequisicao } = require("../services/auditService");
 exports.inserirEscala = async (req, res) => {
   try {
     const { usuario_id, setor_id, data, funcao, observacao, dia_inteiro, hora_inicio, hora_fim } = req.body;
@@ -418,6 +419,51 @@ exports.relatorioEscala = async (req, res) => {
     query += ` ORDER BY e.data ASC, u.nome ASC`;
     const result = await pool.query(query, params);
     res.json(result.rows);
+  } catch (erro) {
+    res.status(500).json({ erro: erro.message });
+  }
+};
+
+exports.excluirEscala = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Buscar informações da escala antes de excluir
+    const resEscala = await pool.query(
+      `SELECT e.*, u.nome as usuario_nome 
+       FROM escala e 
+       JOIN usuarios u ON e.usuario_id = u.id 
+       WHERE e.id = $1`,
+      [id]
+    );
+    
+    if (resEscala.rows.length === 0) {
+      return res.status(404).json({ erro: 'Escala não encontrada' });
+    }
+    
+    const escala = resEscala.rows[0];
+    
+    // Excluir a escala
+    await pool.query('DELETE FROM escala WHERE id = $1', [id]);
+    
+    // Registrar log
+    if (req.user) {
+      await registrarLog({
+        usuario_id: req.user.id,
+        usuario_nome: req.user.nome || req.user.email,
+        acao: 'ESCALA_EXCLUIDA',
+        tabela: 'escala',
+        registro_id: parseInt(id),
+        detalhes: {
+          data: escala.data,
+          usuario_escalado: escala.usuario_nome,
+          funcao: escala.funcao
+        },
+        ...extrairInfoRequisicao(req)
+      });
+    }
+    
+    res.json({ sucesso: true });
   } catch (erro) {
     res.status(500).json({ erro: erro.message });
   }

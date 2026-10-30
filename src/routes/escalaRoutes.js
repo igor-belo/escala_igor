@@ -5,6 +5,7 @@ router.get("/", escalaController.listarEscala);
 router.get("/relatorio", escalaController.relatorioEscala);
 router.put("/periodo", escalaController.atualizarEscalaPeriodo);
 router.put("/:id", escalaController.atualizarEscala);
+router.delete("/:id", escalaController.excluirEscala);
 router.post("/gerar", escalaController.gerarEscalaAntiga);
 router.post("/check_conflito", escalaController.checkConflito);
 router.post("/gerar_custom", escalaController.gerarEscalaCustom);
