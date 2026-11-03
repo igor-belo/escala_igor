@@ -38,27 +38,28 @@ app.use(express.json());
 app.use(cookieParser());
 
 const publicRoutes = ['/login', '/css', '/js', '/components', '/shop_icone.webp'];
-const adminRoutes = ['/bimer', '/bimer-crm', '/configuracoes'];
+const publicRoutes = ['/login', '/login.html', '/css', '/js', '/components', '/shop_icone.webp'];
+const adminRoutes = ['/bimer', '/bimer-crm', '/configuracoes', '/logs'];
 
 app.use((req, res, next) => {
     // Rotas de API são protegidas pelos middlewares nas declarações de rotas
     if (req.path.startsWith('/api')) return next();
     
-    // Rotas públicas (estáticos e login)
-    if (publicRoutes.some(pr => req.path.startsWith(pr))) return next();
+    // Rotas públicas (estáticos e login) - não verificar token
+    if (publicRoutes.some(pr => req.path === pr || req.path.startsWith(pr))) return next();
     
     // Protege acesso às páginas (HTML)
     if (req.path === '/' || req.path.endsWith('.html') || !path.extname(req.path)) {
         const token = req.cookies && req.cookies.auth_token;
         if (!token) {
             res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
-            return res.redirect('/login');
+            return res.redirect('/login.html');
         }
         
         try {
             const decoded = verifyToken(token);
             
-            const isAdminRoute = adminRoutes.some(ar => req.path.startsWith(ar));
+            const isAdminRoute = adminRoutes.some(ar => req.path.startsWith(ar) || req.path === ar);
             if (isAdminRoute && decoded.tipo_perfil !== 'ADMIN') {
                 return res.redirect('/'); // Usuário comum não pode acessar telas de admin
             }
@@ -67,7 +68,7 @@ app.use((req, res, next) => {
         } catch (e) {
             clearTokenCookie(res);
             res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
-            return res.redirect('/login');
+            return res.redirect('/login.html');
         }
     } else {
         next();
@@ -76,6 +77,14 @@ app.use((req, res, next) => {
 
 // Rota explícita para /login — garante que o browser nunca use cache
 app.get('/login', (req, res) => {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+    res.set('Surrogate-Control', 'no-store');
+    res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
+
+app.get('/login.html', (req, res) => {
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
     res.set('Pragma', 'no-cache');
     res.set('Expires', '0');
