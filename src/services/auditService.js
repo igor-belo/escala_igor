@@ -23,6 +23,20 @@ async function registrarLog({
     user_agent = null
 }) {
     try {
+        // Verificar se a tabela existe antes de tentar inserir
+        const checkTable = await pool.query(
+            `SELECT EXISTS (
+                SELECT FROM information_schema.tables 
+                WHERE table_schema = 'public' 
+                AND table_name = 'logs_auditoria'
+            )`
+        );
+        
+        if (!checkTable.rows[0].exists) {
+            console.warn('[AUDIT] Tabela logs_auditoria não existe ainda');
+            return;
+        }
+        
         await pool.query(
             `INSERT INTO logs_auditoria 
             (usuario_id, usuario_nome, acao, tabela, registro_id, detalhes, ip_address, user_agent) 
