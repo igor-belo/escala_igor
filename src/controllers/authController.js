@@ -85,21 +85,30 @@ exports.alterarSenha = async (req, res) => {
       [senhaCripto, id],
     );
     
-    // Buscar nome do usuário
-    const resUser = await pool.query("SELECT nome FROM usuarios WHERE id = $1", [id]);
-    const nomeUsuario = resUser.rows[0]?.nome || 'Desconhecido';
+    // Buscar dados completos do usuário para gerar token correto
+    const resUser = await pool.query("SELECT nome, email, tipo_perfil FROM usuarios WHERE id = $1", [id]);
+    const usuario = resUser.rows[0];
+    
+    if (!usuario) {
+      return res.status(404).json({ erro: "Usuário não encontrado" });
+    }
     
     // Log de alteração de senha
     await registrarLog({
       usuario_id: id,
-      usuario_nome: nomeUsuario,
+      usuario_nome: usuario.nome,
       acao: 'SENHA_ALTERADA',
       tabela: 'usuarios',
       registro_id: id,
       ...extrairInfoRequisicao(req)
     });
     
-    const token = signToken({ id, email: req.body.email || 'unknown', tipo_perfil: 'unknown' });
+    // Gerar token com dados corretos do usuário
+    const token = signToken({ 
+      id, 
+      email: usuario.email, 
+      tipo_perfil: usuario.tipo_perfil 
+    });
     setTokenCookie(res, token);
     res.json({ sucesso: true });
   } catch (erro) {
