@@ -60,11 +60,17 @@ app.use((req, res, next) => {
             
             const isAdminRoute = adminRoutes.some(ar => req.path.startsWith(ar) || req.path === ar);
             if (isAdminRoute && decoded.tipo_perfil !== 'ADMIN') {
-                return res.redirect('/'); // Usuário comum não pode acessar telas de admin
+                console.log(`[AUTH] Bloqueando acesso não-admin a ${req.path} - perfil: ${decoded.tipo_perfil}`);
+                return res.redirect('/');
+            }
+            
+            if (isAdminRoute) {
+                console.log(`[AUTH] Permitindo acesso ADMIN a ${req.path} - perfil: ${decoded.tipo_perfil}`);
             }
             
             next();
         } catch (e) {
+            console.error(`[AUTH] Erro ao verificar token: ${e.message}`);
             clearTokenCookie(res);
             res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
             return res.redirect('/login.html');
