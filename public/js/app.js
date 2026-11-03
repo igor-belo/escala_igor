@@ -604,6 +604,41 @@ async function salvarEdicaoEscala(e) {
   }
 }
 
+// Função para excluir escala
+async function excluirEscala() {
+  const escalaId = document.getElementById("edit_escala_id").value;
+  
+  if (!escalaId) {
+    alert("Erro: ID da escala não encontrado.");
+    return;
+  }
+
+  const confirmacao = confirm("Tem certeza que deseja excluir esta escala?\n\nEsta ação não pode ser desfeita.");
+  
+  if (!confirmacao) {
+    return;
+  }
+
+  try {
+    const res = await fetch(`/api/escala/${escalaId}`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+    });
+
+    if (res.ok) {
+      document.getElementById("modalEdicaoEscala").classList.add("hidden");
+      calendar.refetchEvents();
+      alert("Escala excluída com sucesso.");
+    } else {
+      const errorData = await res.json();
+      alert(`Erro ao excluir escala: ${errorData.erro || 'Erro desconhecido'}`);
+    }
+  } catch (erro) {
+    console.error("Erro ao excluir escala:", erro);
+    alert("Erro ao excluir escala. Verifique sua conexão.");
+  }
+}
+
 // Chamada pelo modal de escolha quando admin clica em uma data
 async function escolhaAcaoData(tipo) {
   document.getElementById("modalEscolhaAcaoData").classList.add("hidden");
