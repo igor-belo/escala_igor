@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const logsController = require('../controllers/logsController');
-const { authMiddleware } = require('../middleware/authMiddleware');
+const authMiddleware = require('../middleware/authMiddleware');
 
 // Todas as rotas de logs requerem autenticação e perfil ADMIN
 router.use(authMiddleware);
