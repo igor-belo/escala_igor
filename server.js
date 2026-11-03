@@ -38,7 +38,7 @@ app.use(express.json());
 app.use(cookieParser());
 
 const publicRoutes = ['/login', '/login.html', '/css', '/js', '/components', '/shop_icone.webp'];
-const adminRoutes = ['/bimer', '/bimer-crm', '/configuracoes', '/logs'];
+const adminRoutes = ['/bimer', '/bimer.html', '/bimer-crm', '/bimer-crm.html', '/configuracoes', '/configuracoes.html', '/logs', '/logs.html'];
 
 app.use((req, res, next) => {
     // Rotas de API são protegidas pelos middlewares nas declarações de rotas
