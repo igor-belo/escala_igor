@@ -37,7 +37,6 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
 
-const publicRoutes = ['/login', '/css', '/js', '/components', '/shop_icone.webp'];
 const publicRoutes = ['/login', '/login.html', '/css', '/js', '/components', '/shop_icone.webp'];
 const adminRoutes = ['/bimer', '/bimer-crm', '/configuracoes', '/logs'];
 
